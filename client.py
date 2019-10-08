@@ -1,4 +1,5 @@
 import socket
+import threading
 
 
 class Client(socket.socket):
@@ -8,14 +9,17 @@ class Client(socket.socket):
         """я задоллбался писать эти комментарии и так вроде всё понятно"""
         super().__init__()
         self.sock = socket.socket()
+        self.lock = threading.Lock()
 
-    def send_msg(self, msg, sock):
+    @staticmethod
+    def send_msg(msg, sock):
         length_msg = str(len(msg))
         length_msg = '0' * (10 - len(length_msg)) + length_msg
         msg = length_msg + msg
         sock.send(msg.encode())
 
-    def recv_msg(self, sock):
+    @staticmethod
+    def recv_msg(sock):
         length_msg = int(sock.recv(10).decode())
         msg = sock.recv(length_msg).decode()
         return msg
@@ -70,18 +74,29 @@ class Client(socket.socket):
         print(data)
 
     def chatting(self):
-        print('Для окончания работы с сервером введите exit ')
-        msg = input()
+        print('Для отключения от сервера введите exit')
 
+        send = threading.Thread(target=self.chat_send)
+        recv = threading.Thread(target=self.chat_recv)
+
+        send.start()
+        recv.start()
+
+    def chat_recv(self):
+        while True:
+            data = self.recv_msg(self.sock)
+            if not data:
+                continue
+            else:
+                print(data)
+
+
+    def chat_send(self):
+        with self.lock:
+            msg = input()
         while msg != 'exit':
             self.send_msg(msg, self.sock)
-
-            data = self.recv_msg(self.sock)
-            print(data)
-
             msg = input()
-
-        self.end()
 
     def end(self):
         self.sock.close()

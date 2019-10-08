@@ -1,7 +1,8 @@
-import errno
+import threading
 import socket
 import errno
 import sys
+import time
 
 
 class Server(socket.socket):
@@ -14,6 +15,9 @@ class Server(socket.socket):
         self.port = 9090
         self.host = ''
         self.users = {}
+        self.threads = []
+        self.data = ""
+        self.lock = threading.Lock()
 
     @staticmethod
     def send_msg(msg, sock):
@@ -101,51 +105,66 @@ class Server(socket.socket):
             print('Начало прослушивания порта', file=file)
 
     def connecting(self):
+        thread = threading.Thread(target=self.connecting)
+        self.threads.append(thread)
         """Подключение клиента"""
-        while True:
+        conn, addr = self.sock.accept()
+        with open('log.txt', 'a') as file:
+            print('Подключение клиента', file=file)
 
-            conn, addr = self.sock.accept()
-            with open('log.txt', 'a') as file:
-                print('Подключение клиента', file=file)
+        thread.start()
 
-            # Считывание имени клиеента и пароля
-            if addr[0] not in self.users.keys():
-                flag = str(1)
-                self.send_msg(flag, conn)
-                self.new_user(conn, addr, self.users)
-            else:
-                flag = str(0)
-                self.send_msg(flag, conn)
-                self.old_user(conn, addr, self.users)
+        self.hello_user(conn, addr)
 
-            msg = 'Hello ' + self.users[addr[0]][0]
-            self.send_msg(msg, conn)
+    def hello_user(self, conn, addr):
+        # Считывание имени клиеента и пароля
+        if addr[0] not in self.users.keys():
+            flag = str(1)
+            self.send_msg(flag, conn)
+            self.new_user(conn, addr, self.users)
+        else:
+            flag = str(0)
+            self.send_msg(flag, conn)
+            self.old_user(conn, addr, self.users)
 
-            self.chatting(conn)
+        msg = 'Hello ' + self.users[addr[0]][0]
+        self.send_msg(msg, conn)
 
-    def chatting(self, conn):
+        self.chatting(conn, addr)
+
+    def chatting(self, conn, addr):
         """Обмен сообщениями с клиентом"""
+
+        send = threading.Thread(target=self.chat_send, args=[conn])
+        recv = threading.Thread(target=self.chat_recv, args=[conn, addr])
+
+        send.start()
+        recv.start()
+
+    def chat_recv(self, conn, addr):
         while True:
             data = self.recv_msg(conn)
             with open('log.txt', 'a') as file:
                 print('Приём данных от клиента', file=file)
-            if not data:
-                conn.close()
-                break
+            self.data = self.data + '[' + self.users[addr[0]][0] + ']: ' + data + '\n'
 
-            self.send_msg(data.upper(), conn)
-            with open('log.txt', 'a') as file:
-                print('Отправка данных клиенту', file=file)
-
-        with open('log.txt', 'a') as file:
-            print('Отключение клиента', file=file)
-
-
+    def chat_send(self, conn):
+        sent_data_count = len(self.data)
+        while True:
+            with self.lock:
+                if len(self.data) > sent_data_count:
+                    self.send_msg(self.data[sent_data_count:], conn)
+                    with open('log.txt', 'a') as file:
+                        print('Отправка данных клиенту', file=file)
+                    sent_data_count = len(self.data)
 
 
 sock = Server()
-sock.bind()
-sock.get_users()
-sock.listen(3)
-sock.connecting()
-
+try:
+    sock.bind()
+    sock.get_users()
+    sock.listen(3)
+    while True:
+        sock.connecting()
+except KeyboardInterrupt:
+    sock.close_server()
