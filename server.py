@@ -3,12 +3,14 @@ from threading import Thread
 
 def one_client(conn,addr):
 	print("Стартовал новый поток")
-	data = conn.recv(1024)
-	if not data:
-		conn.close()
-		
-	print(data.decode())
-	conn.send("Hello from server!".encode())
+	while True:
+		data = conn.recv(1024)
+		if data.decode() == "exit":
+			print("Один клиент отключился!")
+			conn.close()
+			
+		print(data.decode())
+		conn.send("Hello from server!".encode())
 
 sock = socket.socket()
 
