@@ -1,28 +1,27 @@
 
 import socket, threading
-class ClientThread(threading.Thread):
-	def __init__(self,clientAddress,clientsocket):
+class ClThread(threading.Thread):
+	def __init__(self,clAddr,clSock):
 		threading.Thread.__init__(self)
-		self.csocket = clientsocket
-		print ("New connection added: ", clientAddress)
+		self.CSock = clSock
+		print ("New connection added: ", clAddr)
 	def run(self):
-		print ("Connection from : ", clientAddress)
+		print ("We have new client: ", clAddr)
 		msg = ''
 		while True:
-			data = self.csocket.recv(1024)
+			addr = clAddr
+			data = self.CSock.recv(1024)
 			msg = data.decode()
 			if msg=='bye':
 				break
-			print ("from client", msg)
-		print ("Client at ", clientAddress , " disconnected...")
-LOCALHOST = "127.0.0.1"
-PORT = 8080
+			print ("Message from client:", msg)
+		print ("Client:", addr , " disconnect.")
 server = socket.socket()
-server.bind((LOCALHOST, PORT))
+server.bind(("", 9095))
 print("Server started")
-print("Waiting for client request..")
+print("Search the client...")
 while True:
 	server.listen(1)
-	clientsock, clientAddress = server.accept()
-	newthread = ClientThread(clientAddress, clientsock)
-	newthread.start()
+	clSock, clAddr = server.accept()
+	N_T = ClThread(clAddr, clSock)
+	N_T.start()
