@@ -1,15 +1,33 @@
-import socket
+import socket, threading
 
-sock=socket.socket()
+class ClientThread(threading.Thread):
 
-sock.bind(("", 8082))
-sock.listen(1)
+	def __init__(self, clientAddress, clientsocket):
+		threading.Thread.__init__(self)
+		self.socket = clientsocket
+		print("New connection: ", clientAddress)
 
-conn,addr = sock.accept()
+	def run(self):
+		print("Connection from: ", clientAddress)
+		msg=""
+		while True:
+			data = self.socket.recv(1024)
+			msg= data.decode()
+			if msg=="bye":
+				break
+			print("message from client: ", msg)
+			self.socket.send(msg.encode())
+		print("Client ", clientAddress, " disconnected!")
+
+host="127.0.0.1"
+port=8080
+server = socket.socket()
+server.bind((host, port))
+
+print("Server started")
+print("Server is waiting client")
 while True:
-	data = conn.recv(1024).decode()
-	if not data:
-		break
-	conn.send(data.encode())
-
-conn.close()
+	server.listen(1)
+	clientsock, clientAddress = server.accept()
+	newthread = ClientThread(clientAddress, clientsock)
+	newthread.start()
