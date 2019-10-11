@@ -1,6 +1,6 @@
 import socket
 from threading import Thread
-
+#ready
 
 def progress_bar():
 	global scannedports
