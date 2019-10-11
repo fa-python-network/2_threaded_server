@@ -11,5 +11,9 @@ def port_scan(host, port):
 		pass
 
 host="127.0.0.1"
+
+import threading
 for i in range(1000):
-	port_scan(host, i)
+	potoc=threading.Thread(target = port_scan, args=(host, i))
+	potoc.start()
+	
