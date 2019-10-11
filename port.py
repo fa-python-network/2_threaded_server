@@ -25,12 +25,19 @@ def worker():
 			print("Port {} is openned!".format(port))
 			open_ports.append(port)
 
+import time
+import sys
+
 def run(threads, count):
 	get_ports(count)
 	thread_list=[]
 	for i in range(threads):
 		thread = threading.Thread(target=worker)
 		thread_list.append(thread)
+		time.sleep(0.001)
+		sys.stdout.write("\r%d%%" % i)
+		sys.stdout.flush()
+	sys.stdout.write('\n')
 	for thread in thread_list:
 		thread.start()
 	for thread in thread_list:
