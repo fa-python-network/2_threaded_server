@@ -1,3 +1,4 @@
+import sys
 import json
 import hashlib
 import threading
@@ -338,10 +339,12 @@ class Server(threading.Thread, metaclass=SecondInstanceBan):
                         Message.clear_table()
                         User.clear_table()
                 elif answer == "0":
-                    break
+                    self.__close()
+                    sys.exit()
                 else:
                     print("\nНет такой команды. Попробуйте еще раз\n")
                 sleep(1)
+
         else:
             self._listen = True
             self._show_logs = True
@@ -400,7 +403,10 @@ class Server(threading.Thread, metaclass=SecondInstanceBan):
 
         self.logger.start_listening_port(self._port)
         while self._listen is True:
-            user_sock, client = self._server.accept()
+            try:
+                user_sock, client = self._server.accept()
+            except ConnectionAbortedError:
+                break
             peer = Peer(sock_server=self, sock=user_sock, address=client)
             peer.start()
             self._peers.append(peer)
