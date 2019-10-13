@@ -1,4 +1,7 @@
 import sys
+import os
+import signal
+import subprocess
 import json
 import hashlib
 import threading
@@ -15,6 +18,8 @@ class SecondInstanceBan(type):
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(SecondInstanceBan, cls).__call__(*args, **kwargs)
+        signal.signal(signal.SIGTERM, cls._instances[cls].exit)
+        signal.signal(signal.SIGINT, cls._instances[cls].exit)
         return cls._instances[cls]
 
 
@@ -310,7 +315,7 @@ class Server(threading.Thread, metaclass=SecondInstanceBan):
         """
 
         if self.interactive is True:
-            while True:
+            while True or self._listen is True:
                 print(f"\nВыберите пункт из меню\n1 - {'Отключить' if self._listen else 'Включить'} "
                       f"прослушивание порта\n2 – "
                       f"{'Не показывать' if self.logger.write_to_console is True else 'Начать показывать'}"
@@ -340,15 +345,25 @@ class Server(threading.Thread, metaclass=SecondInstanceBan):
                         User.clear_table()
                 elif answer == "0":
                     self.__close()
-                    sys.exit()
                 else:
                     print("\nНет такой команды. Попробуйте еще раз\n")
                 sleep(1)
-
         else:
             self._listen = True
             self._show_logs = True
             self.__start_loop()
+
+    def exit(self, signum, frame):
+        """
+        Насильно отключает сервер
+
+        :param signum:
+        :param frame:
+        :return:
+        """
+
+        self.__close(False)
+        subprocess.check_output(f"kill -9 {os.getpid()};", shell=True).decode()
 
     def start_interactive(self) -> None:
         """
@@ -412,7 +427,7 @@ class Server(threading.Thread, metaclass=SecondInstanceBan):
             self._peers.append(peer)
         self.logger.server_is_stopped()
 
-    def __close(self) -> None:
+    def __close(self, sys_exit: bool = True) -> None:
         """
         Закрывает все соединения, в том числе и серверверое
 
@@ -422,3 +437,5 @@ class Server(threading.Thread, metaclass=SecondInstanceBan):
         for item in self._peers:
             item.close()
         self._server.close()
+        if sys_exit is True:
+            sys.exit()

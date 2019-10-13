@@ -9,5 +9,3 @@ if __name__ == '__main__':
 
     server.interactive = True
     server.start()
-
-    # TODO: Поймать KeyboardInterrupt
