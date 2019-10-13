@@ -59,6 +59,7 @@ while ex:
     msg = input()
     if msg == "exit":
         ex = False
+        checkdata = None
     sendmsg(sock, msg)
 
 sock.close()

@@ -5,14 +5,14 @@ import logging
 from sendcheck import *
 import threading
 
-SALT = 'memkekazaza'.encode("utf-8")  # соль для хеширования
+SALT = 'memkekazazaaaff'.encode("utf-8")  # соль для хеширования
 varcom = ['mymsg', 'send', 'exit']  # Список доступных команд
 users = []
 # Настройки логгинга (( Взято у умного соседа))
 logging.basicConfig(filename="log_serv", level=logging.INFO)
 
-
-
+with open('names.json', 'r') as file:
+    names = json.load(file)
 
 
 def hashpass(passw: str):  # Функция хеширования данных
@@ -30,21 +30,17 @@ class BugurtThread(threading.Thread):
 
     @staticmethod
     def mem(ipv):  # Функция проверки ip адреса в базе
-        with open('names.json', "r") as file:
-            memory = json.load(file)
-            if ipv not in memory:
-                return False
-            else:
-                return memory[ipv][0]
+        if ipv not in names:
+            return False
+        else:
+            return names[ipv][0]
 
     @staticmethod
     def autoriz(ipv, passw):  # Функция проверки пароля
-        with open('names.json', "r") as file:
-            memory = json.load(file)
-            if memory[ipv][1] == hashpass(passw):
-                return True
-            else:
-                return False
+        if names[ipv][1] == hashpass(passw):
+            return True
+        else:
+            return False
 
     def login(self):
         logging.info(f"Connect - {self.addr}")
@@ -63,20 +59,15 @@ class BugurtThread(threading.Thread):
             name = checkmsg(self.conn)
             sendmsg(self.conn, "Введите, ваш пароль:")
             passw = checkmsg(self.conn)
-
-            with open('names.json', 'r') as file:  # Сохранение пароля
-                names = json.load(file)
-                names[self.addr[0]] = [name, hashpass(passw)]
+            names[self.addr[0]] = [name, hashpass(passw)]
             with open('names.json', 'w') as file:
                 json.dump(names, file)
-            with open(name + '.txt', 'w') as file:  # Создание файла пользователя
-                file.write('your message: \n')
+        self.username = check
         sendmsg(self.conn, "Здесь сегодня тесновато. Но для тебя всегда место найдется!")
 
-    @staticmethod
-    def sendall(msg):
+    def sendall(self, msg):
         for con in users:
-            sendmsg(con.conn, msg)
+            sendmsg(con.conn, self.username+': '+msg)
 
     def run(self):
         users.append(self)
