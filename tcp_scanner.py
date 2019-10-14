@@ -1,3 +1,4 @@
+import os
 import subprocess
 import socket
 import time
@@ -83,7 +84,7 @@ class ProgressBar:
 class PortScanner(Thread):
 
     def __init__(self, start_port: int = 1, end_port: int = 65535, host: str = "localhost",
-                 use_pool: bool = False, thread_delay: float = 0.001):
+                 use_pool: bool = False, thread_posix_delay: float = 0.001, pool_len: int = 2):
         """
         Порт сканер
         """
@@ -100,7 +101,8 @@ class PortScanner(Thread):
         self.is_scan = dict()
         self.__completed = False
         self.__use_pool = use_pool
-        self.__thread_delay = thread_delay
+        self.__thread_posix_delay = thread_posix_delay
+        self.__pool_len = pool_len
 
     def start_interactive(self) -> None:
         """
@@ -139,28 +141,51 @@ class PortScanner(Thread):
         self.progress_bar.prefix = prefix
 
         print("\n\nВыберите способ запуска сервера\n1 - Максимальное количество потоков"
-              "\n2 - Ограничить потокои с помощью Pool из Multiprocessing")
-        answer = input("Выбор (1/2): ")
-        if answer == "1":
-            self.__use_pool = True
-            answer = None
-            while isinstance(answer, float):
-                print("\n\nВведите задержку между созданиями потоков\nНапример: '0.1'\nПо умолчанию: '0.001'")
-                try:
-                    self.__thread_delay = float(input("Выбор: "))
-                except ValueError:
-                    self.__thread_delay = 0.001
-                print(f"Установлена задержка: {self.__thread_delay}")
-        else:
-            self.__use_pool = False
+              "\n2 - Ограничить создание потоков с помощью Pool из Multiprocessing")
+        answer = input("Выбор (1 - Да, 2 - Нет): ")
 
-        print("\n\nПопытаться изменить лимит файловых дескрипторов?\n1 - Да\n2 - Нет")
-        answer = input("Выбор (1/2): ")
         if answer == "1":
-            desc = subprocess.check_output("ulimit -n 10000;ulimit -n;", shell=True).decode()
+            self.__use_pool = False
+            if os.name != "posix":
+                self.__thread_posix_delay = 0
+            elif os.name == "posix":
+                answer = input("\n\nИспользовать задержку при создании потоков?\nОтвет (1 - Да, 2 - Нет): ")
+                if answer == "1":
+                    print("\n\nВведите задержку между созданиями потоков\nНапример: '0.1'\n"
+                          f"Текущая: '{self.__thread_posix_delay}'")
+                    answer = float(input("Выбор: "))
+                    if isinstance(answer, float):
+                        self.__thread_posix_delay = answer
+                else:
+                    self.__thread_posix_delay = 0
+            print(f"\n\nУстановлена задержка между созданиями потоков: {self.__thread_posix_delay}")
         else:
-            desc = subprocess.check_output("ulimit -n;", shell=True).decode()
-        print(f'Выбранный лимит файловых дескрипторов: {desc}')
+            self.__use_pool = True
+            print(f"\n\nВведите размер Pool или 'CPU' для подстановки кол-во ядер процессора\n"
+                  f"Текущий размер Pool: {self.__pool_len}\n(Запускает {self.__pool_len} "
+                  f"потока и ждет их выполения до запуска следующих)\nСлишком большее значение приведет к ошибке\n"
+                  f"Советую ставить по кол-ву ядер")
+            try:
+                answer = input("Выбор: ")
+                self.__pool_len = int(answer)
+            except ValueError:
+                if answer.lower() == "cpu":
+                    self.__pool_len = os.cpu_count()
+            print(f"Установленный размер Pool: {self.__pool_len}")
+
+        if os.name == "posix":
+            try:
+                u_limit = subprocess.check_output("ulimit -n 10000;ulimit -n;", shell=True).decode()
+                print(f'Лимит файловых дескрипторов: {u_limit}')
+            except Exception:
+                pass
+
+        while True:
+            answer = input("Запустить? (1 или y): ")
+            if answer == "1" or answer.lower() == "y":
+                break
+
+        os.system('cls' if os.name == 'nt' else 'clear')
         self.run()
 
     def run(self) -> None:
@@ -176,15 +201,24 @@ class PortScanner(Thread):
         progress_bar.start()
 
         if self.__use_pool is True:
-            pool = ThreadPool(32)
+            pool = ThreadPool(self.__pool_len)
             pool.map(self.scanner, range(self.start_port, self.end_port))
             pool.close()
             pool.join()
         else:
-            for i in range(self.start_port, self.end_port):
-                time.sleep(self.__thread_delay)
-                th = Thread(target=self.scanner, args=(i,))
-                th.start()
+            if os.name == "posix":
+                for i in range(self.start_port, self.end_port):
+                    time.sleep(self.__thread_posix_delay)
+                    th = Thread(target=self.scanner, args=(i,))
+                    th.start()
+            else:
+                threads = list()
+                for i in range(self.start_port, self.end_port):
+                    threads.append(Thread(target=self.scanner, args=(i,)))
+                for i in threads:
+                    i.start()
+                for i in threads:
+                    i.join()
 
     def __calculate_count(self) -> int:
         """
@@ -246,4 +280,3 @@ if __name__ == '__main__':
 
     port_scanner = PortScanner()
     port_scanner.start_interactive()
-
