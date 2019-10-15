@@ -1,0 +1,8 @@
+ask_username = 'Username: '
+ask_password = 'Password: '
+incorrect_password = 'Username or password incorrect!'
+successful_login = 'Login sucessful!'
+greetings = 'Greetings, {}!'
+end_of_messages = '\end'
+unresolved_command = 'Unresolved command'
+no_user = 'No such user registered'
