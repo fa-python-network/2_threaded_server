@@ -57,6 +57,7 @@ class BugurtThread(threading.Thread):
         else:  # Ветка нового пользователя
             sendmsg(self.conn, "Введите, ваше имя:")
             name = checkmsg(self.conn)
+            check = name
             sendmsg(self.conn, "Введите, ваш пароль:")
             passw = checkmsg(self.conn)
             names[self.addr[0]] = [name, hashpass(passw)]
@@ -72,14 +73,16 @@ class BugurtThread(threading.Thread):
     def run(self):
         users.append(self)
         while self.connected:
-            msg = checkmsg(self.conn)
-            if msg == 'exit':
-                self.connected = False
-                users.remove(self)
-                logging.info(f'Command {msg}')
-            else:
-                self.sendall(msg)
-
+            try:
+                msg = checkmsg(self.conn)
+                if msg == 'exit':
+                    self.connected = False
+                    users.remove(self)
+                    logging.info(f'Command {msg}')
+                else:
+                    self.sendall(msg)
+            except KeyboardInterrupt:
+                break
 
 sock = socket.socket()
 port = 9090

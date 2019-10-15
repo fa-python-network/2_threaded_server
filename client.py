@@ -6,8 +6,11 @@ import threading
 
 def printmsg():
     while True:
-        data = checkmsg(sock)
-        print(data)
+        try:
+            data = checkmsg(sock)
+            print(data)
+        except KeyboardInterrupt:
+            break
 
 
 
