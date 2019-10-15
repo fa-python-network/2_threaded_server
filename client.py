@@ -1,10 +1,19 @@
 import socket
+import pickle
 from threading import Thread
 
 def update_chat():
+	global username
+	historychat = sock.recv(10240);
+	historychat = pickle.loads(historychat)
+	print(historychat)
 	while True:
 		answer = sock.recv(1024)
-		print(f'\n',answer.decode())
+		if '@'+username in answer.decode().split():
+			print("*** ВАС УПОМЯНУЛИ ***")
+			print(f'\n',answer.decode())
+		else:
+			print(f'\n',answer.decode())
 
 ip = 'localhost'
 port = 9100
@@ -39,9 +48,11 @@ else:
 	sock.send(password.encode())
 	answer = sock.recv(1024)
 	if answer.decode() == 'valid':
+		print("ДЛЯ ЛИЧНОГО УПОМИНАНИЯ ИСПОЛЬЗУЙТЕ ФОРМАТ @ИМЯ! Таким образом у получателя сообщение будет выделяться! Его увидят все!")
 		Thread(target=update_chat,args=()).start()
+		
 		while True:
-			msg = input('Ваше сообщение: ')
+			msg = input()
 			if msg == 'exit':
 				sock.send('exit_cmd'.encode())
 				break
