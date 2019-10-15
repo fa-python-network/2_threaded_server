@@ -62,7 +62,7 @@ except OSError:
     port = sock.getsockname()[1]
 
 log.debug('Сервер слушает порт {}'.format(port))
-print(f'current port: {port}')
+print(f'current port.py: {port}')
 sock.listen(5)
 
 try:

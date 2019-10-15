@@ -27,7 +27,7 @@ def identify(sock):
 
 sock = socket.socket()
 log.info('Клиент запущен')
-port = int(input('port: '))
+port = int(input('port.py: '))
 sock.connect(('localhost', port))
 log.info('Подключено к серверу')
 identify(sock)
