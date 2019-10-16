@@ -26,37 +26,31 @@ while not k:
             port = 9090
 
         sock.connect((host, int(port)))
-        #print(f"Если вы новый пользователь, введите 1 \n Если хоти войти, введите 2")
-        #login = input()
-        #while login != 1 or login != 2:
-            #print("Неверное значение")
-            #login = input()
 
-         # регистрация нового пользователя
-        #if login == 1:
-            #print("Введите свое Имя")
-            #msg = input()
-            #send_msg(sock, msg)
-            #цршду
+        #Я очень долго пыталась сделать регистрацию пользователей
+        #И в итоге пришла к выводу, что проще их написать ручками
+        #Поэтому просто проверяю пользователя в файле
+        print("Введите свое Имя")
+        msg = input()
+        send_msg(sock, msg)
+        proverka = recv_msg(sock)
+        while proverka == 'False':
+            print("Такого пользователя не существует \nВведите свое имя")
+            msg = input()
+            send_msg(sock, msg)
+            proverka = recv_msg(sock)
 
+        #проверяем пароль
+        print("введите пароль")
+        psw = str(input())
+        send_msg(sock, psw)
+        proverka = recv_msg(sock)
+        while proverka == 'False':
+            print("Неверный пароль \nВведите пароль")
+            psw = str(input())
+            send_msg(sock, psw)
+            proverka = recv_msg(sock)
 
-        #c = recv_msg(sock)
-        # создаем нового пользователя, если его нет в файле
-        #if c == "What is your name?":
-            #print("Введите свое Имя")
-            #msg = input()
-            #send_msg(sock, msg)
-            #print("введите пароль")
-            #psw = input()
-            #send_msg(sock, psw)
-            #c = recv_msg(sock)
-
-        #c1 = recv_msg(sock)
-        #print("Введите пароль")
-        #psw = input()
-        #while c1 != psw:
-            #print(f"Неверный пароль \n Введите пароль")
-            #psw = input()
 
 
         print("Введите сообщение")

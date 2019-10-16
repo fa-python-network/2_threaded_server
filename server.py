@@ -36,17 +36,36 @@ class T(threading.Thread):
 
     def run(self):
 
-        #try:
-            #c = users[self.addr]
-        #except KeyError:
-            #send_msg(self.conn, "What is your name?")
-            #users[self.addr] = []
-            #users[self.addr].append(recv_msg(self.conn))
-            #users[self.addr].append(recv_msg(self.conn))
-           #write_into_json(users, 'users.json')
 
-        #send_msg(self.conn, users[self.addr][0])
-        #send_msg(self.conn, users[self.addr][1])
+        name = recv_msg(self.conn)
+        pr = True
+        try:
+            ex_name = users[name]
+        except KeyError:
+            pr = False
+        send_msg(self.conn, str(pr))
+        while not pr:
+            name = recv_msg(self.conn)
+            pr = True
+            try:
+                ex_name = users[name]
+            except KeyError:
+                pr = False
+            send_msg(self.conn, str(pr))
+
+
+
+        pr = False
+        pswd = recv_msg(self.conn)
+        if ex_name == pswd:
+            pr = True
+        send_msg(self.conn, str(pr))
+        while not pr:
+            pswd = recv_msg(self.conn)
+            if ex_name == pswd:
+                pr = True
+            send_msg(self.conn, str(pr))
+
         msg = ""
         while True:
             try:
@@ -59,7 +78,7 @@ class T(threading.Thread):
 
 
 port = 9090
-#users = read_from_json('users.json')
+users = read_from_json('users.json')
 try:
     sock.bind(('', port))
 except OSError:
