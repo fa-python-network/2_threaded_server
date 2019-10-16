@@ -1,8 +1,31 @@
 import socket
-import threading
 
-port = 9090
+import threading
+import json
+
 sock = socket.socket()
+history = {}
+
+
+##'users.json'
+def write_into_json(dct, file_name):
+    with open(file_name, 'w') as f:
+        json.dump(dct, f)
+
+def read_from_json(file_name):
+    with open(file_name, 'r') as f:
+        return json.load(f)
+
+
+def send_msg(conn, msg):
+    header = f'{len(msg):<4}'
+    conn.send(f'{header}{msg}'.encode())
+
+
+def recv_msg(conn):
+    header = int(conn.recv(4).decode().strip())
+    data = conn.recv(header*2).decode()
+    return data
 
 
 class T(threading.Thread):
@@ -12,17 +35,31 @@ class T(threading.Thread):
         self.addr = addr
 
     def run(self):
+
+        #try:
+            #c = users[self.addr]
+        #except KeyError:
+            #send_msg(self.conn, "What is your name?")
+            #users[self.addr] = []
+            #users[self.addr].append(recv_msg(self.conn))
+            #users[self.addr].append(recv_msg(self.conn))
+           #write_into_json(users, 'users.json')
+
+        #send_msg(self.conn, users[self.addr][0])
+        #send_msg(self.conn, users[self.addr][1])
         msg = ""
         while True:
-            data = self.conn.recv(1024)
-            if not data:
+            try:
+                data = recv_msg(self.conn)
+            except ValueError:
                 break
-            self.conn.send(data)
-            print(data.decode())
+            send_msg(self.conn, data)
+            print(data)
 
 
 
 port = 9090
+#users = read_from_json('users.json')
 try:
     sock.bind(('', port))
 except OSError:
