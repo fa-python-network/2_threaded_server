@@ -1,0 +1,45 @@
+import socket
+
+while True:
+    port = input('Введите порт от 1024 до 65535: \n')
+    if not port.isnumeric():
+        print('Ошибка')
+    elif 1023 <= int(port) <= 65535:
+        break
+    else:
+        print('Ошибка: порт не входит в нужный диапазон')
+
+while True:
+    address = input('Введите ip сервера или оставьте пустым для значения localhost: \n')
+    if address == '':
+        address = 'localhost'
+        break
+    else:
+        break
+
+sock = socket.socket()
+sock.setblocking(True)
+sock.connect((address, int(port)))
+
+auth = sock.recv(1024).decode()
+print(auth)
+if auth == 'Input your name:':
+    sock.send(input().encode())
+    print(sock.recv(1024).decode())
+    sock.send(input().encode())
+else:
+    print(sock.recv(1024).decode())
+while True:
+    sock.send(input().encode())
+    answer = sock.recv(1024).decode()
+    print(answer)
+    if answer[0] == 'C':
+        break
+
+while True:
+    msg = input("Input message: ")
+    if msg == "exit":
+        sock.close()
+        break
+    sock.send(msg.encode())
+    data = sock.recv(1024)
