@@ -8,8 +8,8 @@ class ClThread(threading.Thread):
 	def run(self):
 		print ("We have new client: ", clAddr)
 		msg = ''
+		addr = clAddr
 		while True:
-			addr = clAddr
 			data = self.CSock.recv(1024)
 			msg = data.decode()
 			if msg=='bye':
