@@ -9,9 +9,9 @@ class Server:
 	'''
 	init 
 	:log - файл логировани
-	::users = списко пользователей json
-	:::clients = все клиенты из json
-	::::status = None
+	:users = списко пользователей json
+	:clients = все клиенты из json
+	:status = None
 	'''
 	def __init__(self,log = "file.log", users = "users.json", clients = [], status = None):
 		self.__log = log
@@ -20,6 +20,7 @@ class Server:
 		self.port =  int(input("Порт:"))
 		self.sock = None
 		self.status = status
+		self.state = "active"
 		self.messages = []
 		if os.path.isfile("messages.db") == False : self.createMessagesDataBase()
 		self.start()
@@ -37,12 +38,44 @@ class Server:
  				self.port+=1		
 		print(f'Занял порт {self.port}')
 		self.sock.listen(5)
+		Thread(target=self.menu).start()
 		while True:
-			conn, addr = self.sock.accept()
-			self.serverStarted(addr)
-			Thread(target = self.listenToClient,args = (conn,addr)).start()
-			self.clients.append(conn)
+			while self.state != "paused":
+				conn, addr = self.sock.accept()
+				self.serverStarted(addr)
+				Thread(target = self.listenToClient,args = (conn,addr)).start()
+				self.clients.append(conn)
 
+	def menu(self):
+		while True:
+			state = int(input(
+			"""
+Здравствуйте, чем я могу вам помочь?
+1.Отключение сервера
+2.Прекратить прослушивать порты
+3.Показ логов
+4.Очистка логов
+5.Очистка файла идентификации. \n"""
+			))
+			if state == 1:
+				os._exit
+			if state == 2:
+				self.state = "inactive" if self.status == "active" else "active"
+			elif state == 3:
+				try:
+					with open(self.__log, "r") as f:
+						for line in f:
+							print(line)
+				except FileNotFoundError:
+					print("Еще нет логов")
+			elif state == 4:
+				open(self.__log, 'w').close()
+			elif state == 5:
+				open(self.__users, 'w').close()
+			else:
+				print("Повторите еше раз!")
+				sleep(1.5)
+				os.system('cls' if os.name=='nt' else 'clear')
 	def broadcast(self,msg, conn): 
 		for sock in self.clients:
 			if sock != conn:
