@@ -1,1 +1,3 @@
-{"clients": [{"ip": "127.0.0.3", "name": "igor", "passwd": "12345678"}, {"ip": "127.0.0.2", "name": "sonya", "passwd": "12345678"}, {"ip": "127.0.0.6", "name": "sonya", "passwd": "12345678"}, {"ip": "127.0.0.1", "name": "toma", "passwd": "1234321"}]}
+{"clients": [{"ip": "127.0.0.3", "name": "igor", "passwd": "12345678"}, 
+	         {"ip": "127.0.0.2", "name": "sonya", "passwd": "12345678"},
+	         {"ip": "127.0.0.6", "name": "sonya", "passwd": "12345678"}]}

@@ -11,8 +11,8 @@ while True:
 
 while True: 
 	ip= input("введите ip или _ для localhost: \n")
-	if ip ==' ':
-		ip= 'localhost'
+	if ip =='_':
+		ip = 'localhost'
 		break
 	elif re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) == None:
 		print('введите снова')
