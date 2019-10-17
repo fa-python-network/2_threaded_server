@@ -1,7 +1,7 @@
 import socket
 from re import match
 
-while True:									# ввод IP клиента		
+while True:																# ввод IP клиента		
 	host= r'[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-9]?[0-9]?[0-9]\.'
 	client_host=input('Enter your IP: ')
 	if client_host=='':
@@ -14,7 +14,7 @@ while True:									# ввод IP клиента
 		print('You made a mistake try again')
 
 
-while True:									# проверка порта 
+while True:											# проверка порта 
 	client_port=int(input('Enter port: '))
 	if 1024<=client_port<=65525:
 		break
@@ -26,16 +26,25 @@ sock.setblocking(1)
 sock.connect((client_host,int(client_port)))
 
 def send_msg(conn: socket.socket, msg):
+	"""
+	отправка сообщений
+	"""
 	header=len(msg)
 	formated_msg = f'{header:4}{msg}'.encode()
 	sock.send(formated_msg)
 
 def recv_msg(conn:socket.socket):
+	"""
+	получение сообщений
+	"""	
 	header=conn.recv(4).decode()
 	msg=conn.recv(int(header))
 	return msg
 
 def auten():
+	"""
+	аутентификация пользователя
+	"""
 	answer=recv_msg()
 	if 'Hello' in answer:
 		pswd_ans=recv_msg()
