@@ -1,18 +1,18 @@
 import socket
+from re import match
 
 while True:									# ввод IP клиента		
+	host= r'[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-9]?[0-9]?[0-9]\.'
 	client_host=input('Enter your IP: ')
 	if client_host=='':
 		break
 	elif client_host=='localhost':
 		break
+	elif client_host and match(host,client_host):
+		break
 	else:
-		parts=client_host.strip('.',4)
-		for i in parts:
-			if 0<=int(i)<=255:
-				break
-			else:
-				print('You made a mistake. Try again!')
+		print('You made a mistake try again')
+
 
 while True:									# проверка порта 
 	client_port=int(input('Enter port: '))
@@ -21,36 +21,44 @@ while True:									# проверка порта
 	else:
 		print('You made a mistake. Try again!')
 
-
 sock = socket.socket()
 sock.setblocking(1)
 sock.connect((client_host,int(client_port)))
 
-auten=sock.recv(1024).decode()				# аутентификация
-if 'Create' in auten:
-	print(auten)
-	sock.send(input('Name: ').encode())			# создание имени нового клиента
-	sock.send(input('Password: ').encode())		# создание пароля нового клиента
-else:
-	print(auten)
-	while True:
-		sock.send(input('Password: ').encode())  # введение пароля известного клиента
-		anw = sock.recv(1024).decode()
-		if 'C' == anw[0]:						# проверка введенного пароля
-			print(anw)
-			break
-		print(anw)
-		print(sock.recv(1024).decode())
+def send_msg(conn: socket.socket, msg):
+	header=len(msg)
+	formated_msg = f'{header:4}{msg}'.encode()
+	sock.send(formated_msg)
+
+def recv_msg(conn:socket.socket):
+	header=conn.recv(4).decode()
+	msg=conn.recv(int(header))
+	return msg
+
+def auten():
+	answer=recv_msg()
+	if 'Hello' in answer:
+		pswd_ans=recv_msg()
+		print('Password: ')
+		while True:
+			send_msg(input())
+			if 'Lets' in recv_msg():
+				print('Correct')
+				break
+			print('Again')
+	elif "Create" in answer:
+		print(answer)
+		send_msg(input('New Name: '))
+		print(recv_msg())
+		send_msg(input('New password: '))
 
 
-msg=''											# отправка сообщений серверу
+msg=''
 while True:
-	print('Message:')
-	msg=input()
+	msg=input('Message: ')
 	if 'exit' in msg:
-		sock.send(msg.encode())
+		send_msg(sock,msg)
 		break
-	sock.send(msg.encode())
-#print(sock.recv(1024).decode())
-
+	send_msg(sock,msg)
 sock.close()
+
