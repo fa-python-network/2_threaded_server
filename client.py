@@ -1,14 +1,26 @@
-import socket
-SERVER = "127.0.0.1"
-PORT = 8080
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((SERVER, PORT))
-client.sendall(bytes("Это клиенту",'UTF-8'))
-while True:
-  in_data =  client.recv(1024)
-  print("Для сервера :" ,in_data.decode())
-  out_data = input()
-  client.sendall(bytes(out_data,'UTF-8'))
-  if out_data=='exit':
-  	break
-client.close()
+import socket 
+import select 
+import sys 
+  
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+if len(sys.argv) != 3: 
+    print "Неправильные данные"
+    exit() 
+IP_address = str(sys.argv[1]) 
+Port = int(sys.argv[2]) 
+server.connect((IP_address, Port)) 
+  
+while True: 
+    sockets_list = [sys.stdin, server] 
+    read_sockets,write_socket, error_socket = select.select(sockets_list,[],[])  
+    for socks in read_sockets: 
+        if socks == server: 
+            message = socks.recv(2048) 
+            print message 
+        else: 
+            message = sys.stdin.readline() 
+            server.send(message) 
+            sys.stdout.write("<You>") 
+            sys.stdout.write(message) 
+            sys.stdout.flush() 
+server.close() 

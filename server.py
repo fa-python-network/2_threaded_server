@@ -1,29 +1,55 @@
-import socket, threading
-class ClientThread(threading.Thread):
-    def __init__(self,clientAddr,clientsock):
-        threading.Thread.__init__(self)
-        self.csocket = clientsock
-        print ("Новое соединение создано: ", clientAddr)
-    def run(self):
-        print ("Подключение : ", clientAddr)
-        msg = ''
-        while True:
-            data = self.csocket.recv(2048)
-            msg = data.decode()
-            if msg=='exit':
-              break
-            print ("От клиента: ", msg)
-            self.csocket.send(bytes(msg,'UTF-8'))
-        print ("Клиент ", clientAddr , " отсоеденился")
-LOCALHOST = "127.0.0.1"
-PORT = 8080
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server.bind((LOCALHOST, PORT))
-print("Сервер запущен")
-print("Ожидается подключение клиентов")
-while True:
-    server.listen(1)
-    clientsock, clientAddr = server.accept()
-    newthread = ClientThread(clientAddr, clientsock)
-    newthread.start()
+iserver.py
+
+import socket 
+import select 
+import sys 
+from thread import *
+  
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
+ 
+if len(sys.argv) != 3: 
+    print "Неправильные данные"
+    exit() 
+IP_address = str(sys.argv[1]) 
+Port = int(sys.argv[2]) 
+server.bind((IP_address, Port)) 
+server.listen(100) 
+list_of_clients = []   
+def clientthread(conn, addr): 
+  
+ 
+    conn.send("Всем кискам пис, всем ****** кис, вы в чате") 
+    while True: 
+            try: 
+                message = conn.recv(2048) 
+                if message: 
+                    print "<" + addr[0] + "> " + message 
+                    message_to_send = "<" + addr[0] + "> " + message 
+                    broadcast(message_to_send, conn) 
+                else: 
+                    remove(conn)  
+            except: 
+                continue
+
+def broadcast(message, connection): 
+    for clients in list_of_clients: 
+        if clients!=connection: 
+            try: 
+                clients.send(message) 
+            except: 
+                clients.close() 
+                remove(clients) 
+
+def remove(connection): 
+    if connection in list_of_clients: 
+        list_of_clients.remove(connection) 
+  
+while True: 
+    conn, addr = server.accept() 
+    list_of_clients.append(conn) 
+    print addr[0] + " connected"
+    start_new_thread(clientthread,(conn,addr))     
+  
+conn.close() 
+server.close() 
