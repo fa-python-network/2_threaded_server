@@ -1,5 +1,46 @@
 import socket
 import json
+import threading
+
+def send_msg(conn: socket.socket,msg):
+	header=len(msg)
+	formated_msg = f'{header:4}{msg}'.encode()
+	conn.send(formated_msg)
+
+def recv_msg(conn: socket.socket):
+	header=conn.recv(4).decode()
+	msg=conn.recv(int(header))
+	return msg.decode()
+
+def iden(conn: socket.socket, addr):
+	with open('login.json', 'r') as A:
+		login=json.loads(A)
+		for i in login['clients']:
+			if addr[0]==i['ip']:
+				send_msg(conn,"Hello, {}".format(i['name']))
+
+			else:
+				with open('login.json', 'a') as A:
+					login=json.dumps(A)
+					send_msg(conn,'Create a name')
+					name=recv_msg(conn)
+					send_msg(conn,'Create a Password')
+					pswd=recv_msg(conn,)
+					new_client={'ip': addr[0], 'name': name, 'password': pswd}
+					login['clients'].append(new_client)
+					json.dumps(login)
+
+
+def handle(conn: socket.socket):
+	data=''
+	while True:
+		iden(conn,addr)
+		msg= recv_msg(conn)
+		send_msg(conn,msg)
+		data+=msg
+		if not msg:
+			conn.close()
+		return data
 
 sock = socket.socket()
 
@@ -16,39 +57,14 @@ while port!=65525:
 sock.listen(0)			
 sock.setblocking(1)
 
-
-
-while True:
-	conn,addr=sock.accept()
-	print('Now connected to {}'.format(addr[0]))
-	with open('data.json', 'r+') as f:				#проверка Ip клиента (сохранен ли он в файле)
-		data=json.loads(f.read())
-		for i in data['Clients']:
-			if addr[0]==i['IP']:
-				conn.send('Hello, {}!'.format(i['Name']).encode())
-				while True:
-					conn.send('\nEnter your password, please.'.encode())
-					pswd=conn.recv(1024).decode()
-					if pswd==i['Password']:
-						conn.send('Correct password. Well done!'.encode())
-						break
-					else:
-						conn.send('Wrong password. Try again!'.encode())
-				break
-		else:										# создание нового клиента
-			conn.send('Create an account'.encode())
-			new_name=conn.recv(1024).decode()
-			conn.send('Create a password'.encode())
-			new_pswd=conn.recv(1024).decode()
-			new_client={'IP': addr[0], 'Name': new_name, 'Password': new_pswd} 	# запись новые данные в файл
-			data['Clients'].append(new_client)
-			f.write(json.dumps(data))
-
-	msg=''							# чтение сообщений от клиента
+try:
 	while True:
-		data = conn.recv(1024)
-		if not data:
-			break
-		msg+=data.decode()+' '
-		print('The IP {} send message: [{}]'.format(addr[0], msg))
-conn.close()
+		conn,addr=sock.accept()
+		tr=threading.Thread(target=handle, args=[conn])
+		print('Подключен клиент {}'.format(addr[0]))
+
+finally:
+	conn.close()
+
+
+	
