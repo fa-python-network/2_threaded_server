@@ -1,11 +1,11 @@
 import socket, threading
 class ClientThread(threading.Thread):
-    def __init__(self,clientAddress,clientsocket):
+    def __init__(self,clientAddr,clientsock):
         threading.Thread.__init__(self)
-        self.csocket = clientsocket
-        print ("Новое соединение создано: ", clientAddress)
+        self.csocket = clientsock
+        print ("Новое соединение создано: ", clientAddr)
     def run(self):
-        print ("Подключение : ", clientAddress)
+        print ("Подключение : ", clientAddr)
         msg = ''
         while True:
             data = self.csocket.recv(2048)
@@ -14,7 +14,7 @@ class ClientThread(threading.Thread):
               break
             print ("От клиента: ", msg)
             self.csocket.send(bytes(msg,'UTF-8'))
-        print ("Клиент ", clientAddress , " отсоеденился")
+        print ("Клиент ", clientAddr , " отсоеденился")
 LOCALHOST = "127.0.0.1"
 PORT = 8080
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -24,6 +24,6 @@ print("Сервер запущен")
 print("Ожидается подключение клиентов")
 while True:
     server.listen(1)
-    clientsock, clientAddress = server.accept()
-    newthread = ClientThread(clientAddress, clientsock)
+    clientsock, clientAddr = server.accept()
+    newthread = ClientThread(clientAddr, clientsock)
     newthread.start()
