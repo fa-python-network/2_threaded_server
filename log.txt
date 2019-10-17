@@ -1,0 +1,6 @@
+Server starts
+Now listen
+new data from client
+new data from client
+data to client
+stop client
