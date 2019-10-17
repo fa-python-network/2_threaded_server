@@ -3,16 +3,25 @@ import json
 import threading
 
 def send_msg(conn: socket.socket,msg):
+	"""
+	отправка сообщений
+	"""
 	header=len(msg)
 	formated_msg = f'{header:4}{msg}'.encode()
 	conn.send(formated_msg)
 
 def recv_msg(conn: socket.socket):
+	"""
+	принятие сообщений
+	"""
 	header=conn.recv(4).decode()
 	msg=conn.recv(int(header))
 	return msg.decode()
 
 def iden(conn: socket.socket, addr):
+	"""
+	идентификация клиента
+	"""
 	with open('login.json', 'r') as A:
 		login=json.loads(A)
 		for i in login['clients']:
@@ -32,6 +41,9 @@ def iden(conn: socket.socket, addr):
 
 
 def handle(conn: socket.socket):
+	"""
+	подключение клиента 
+	"""
 	data=''
 	while True:
 		iden(conn,addr)
@@ -59,7 +71,7 @@ sock.setblocking(1)
 
 try:
 	while True:
-		conn,addr=sock.accept()
+		conn,addr=sock.accept()							# при подключении клиента создается новый поток
 		tr=threading.Thread(target=handle, args=[conn])
 		print('Подключен клиент {}'.format(addr[0]))
 
