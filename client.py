@@ -1,8 +1,8 @@
-import socket
-import pickle
-from threading import Thread
+import socket       #сам сокет
+import pickle       #получаем историю чата
+from threading import Thread        #потоки для обновления окна чата
 
-def update_chat():
+def update_chat():      #получение новых сообщений
 	global username
 	historychat = sock.recv(10240);
 	historychat = pickle.loads(historychat)
@@ -27,13 +27,13 @@ print('Подключились к серверу чата')
 username = ""
 password = ""
 
-while not username:
+while not username:     #непустое поле
 	username = input('Введите Ваше имя: ')
 
 sock.send(username.encode())
 answer = sock.recv(1024)
 
-if answer.decode() == 'reg_req':
+if answer.decode() == 'reg_req':        #если нужна регистрация
 	#registation required
 	print('Такого пользователя ещё нет! Запускается процесс регистрации!')
 	print(f'Регистрируемое имя: {username}')
@@ -44,10 +44,10 @@ if answer.decode() == 'reg_req':
 	if answer.decode() == 'reg_end':
 		print('Регистрация завершена! Перезапустите программу!')
 else:
-	password = input('Ваш пароль от аккаунта: ')
+	password = input('Ваш пароль от аккаунта: ')        #просим пароль
 	sock.send(password.encode())
 	answer = sock.recv(1024)
-	if answer.decode() == 'valid':
+	if answer.decode() == 'valid':      #пароль верен
 		print("ДЛЯ ЛИЧНОГО УПОМИНАНИЯ ИСПОЛЬЗУЙТЕ ФОРМАТ @ИМЯ! Таким образом у получателя сообщение будет выделяться! Его увидят все!")
 		Thread(target=update_chat,args=()).start()
 		

@@ -1,2 +1,18 @@
-[igor]: hie
+[egor]: @igor
+[egor]: privet
+[egor]: how are you?
+[igor]: privet
+[igor]: ya norm
+[igor]: proverka
+[igor]: @egor
+[igor]: bye
 igor покинул этот чат.
+[egor]: ?
+[egor]: why?
+[egor]: where are you?
+[igor]: yes
+[igor]: not
+[igor]: now
+[igor]: but
+[igor]: hello
+[egor]: hi
