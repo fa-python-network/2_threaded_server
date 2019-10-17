@@ -7,6 +7,7 @@ import json
 import pickle
 from threading import Thread
 import sys
+from time import sleep
 
 
 class Server():
@@ -85,7 +86,10 @@ class Server():
 	def loadAllmessages(self,conn):
 		with open("messages.txt", "r") as f:
 			for line in f:
+				sleep(0.3)
 				conn.send(pickle.dumps(["message",line]))
+
+
 	def serverStarted(self,ip):
 		with open(self.__log, "a", encoding="utf-8") as f:
 			print(f"{datetime.now().time()} Server Launched {ip}", file=f)
@@ -93,35 +97,52 @@ class Server():
 		with open(self.__log, "a", encoding="utf-8") as f:
 			print(f"{datetime.now().time()} Server Stopped {ip}", file = f)
 
-	def checkUser(self, addr, conn, client):
+
+	def newUser(self,conn, users,client):
+		conn.send(pickle.dumps(["nameRequest",""]))
+		client = pickle.loads(conn.recv(1024))[1]
+		conn.send(pickle.dumps(["passwd","Я вас еще не знаю, поэтому придумайте себе пароль : "]))
+		passwd = self.generateHash(pickle.loads(conn.recv(1024))[1])
+		conn.send(pickle.dumps(["success",f"Здравствуйте, {client}"]))
+		users[client] = {'password': passwd}
+		print(users)
+		msg=f"{client} has connected at {datetime.now().time()}"
+		print(msg)
+		self.broadcast(msg,conn)
+		with open(self.__users, "w", encoding="utf-8") as f:
+			json.dump(users,f)
+
+	
+	def checkUser(self, addr, conn,client):
 		try:
 			open(self.__users).close()
 		except FileNotFoundError:
 			open(self.__users, 'a').close()
 		with open(self.__users, "r") as f:
 			try:
+				conn.send(pickle.dumps(["nameRequest",""]))
+				client = pickle.loads(conn.recv(1024))[1]
 				users = json.load(f)
-				name = users[client]
-				conn.send(pickle.dumps(["passwd","Введите свой пароль: "]))
-				passwd = pickle.loads(conn.recv(1024))[1]
-				conn.send(pickle.dumps(["success",f"Здравствуйте, {client}"])) if self.checkPasswrd(passwd,name['password']) else self.checkUser(addr,conn)
-				msg=f"{client} has connected at {datetime.now().time()}"
-				print(" ")
-				print(msg)
-				self.broadcast(msg,conn)
-				
+				try:
+					name = users[client]
+					conn.send(pickle.dumps(["passwd","Введите свой пароль: "]))
+					passwd = pickle.loads(conn.recv(1024))[1]
+					conn.send(pickle.dumps(["success",f"Здравствуйте, {client}"])) if self.checkPasswrd(passwd,name['password']) else self.checkUser(addr,conn)
+					msg=f"{client} has connected at {datetime.now().time()}"
+					self.broadcast(msg,conn)
+				except: self.newUser(conn,users)
 			except:
 				conn.send(pickle.dumps(["nameRequest",""]))
 				client = pickle.loads(conn.recv(1024))[1]
-				conn.send(pickle.dumps(["passwd","Я вас еще не знаю, поэтому придумайте себе пароль : "]))
+				conn.send(pickle.dumps(["passwd","Я вас еще не знаю, поэтому придумайте себе пароль :  "]))
 				passwd = self.generateHash(pickle.loads(conn.recv(1024))[1])
-				conn.send(pickle.dumps(["success",f"Вы присоеднились к чату, {client}"]))
+				conn.send(pickle.dumps(["success",f"Здравствуйте, {client}"]))
 				msg=f"{client} has connected at {datetime.now().time()}"
-				print(" ")
-				print(msg)
 				self.broadcast(msg,conn)
 				with open(self.__users, "w", encoding="utf-8") as f:
 					json.dump({client : {'password': passwd} },f)
+		
+	
         
 
 server = Server()
