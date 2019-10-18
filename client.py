@@ -34,6 +34,7 @@ def recv_data():
         print(data.decode())
 
 
+# Поток для получения данных от сервера
 data_reader = threading.Thread(target=recv_data)
 data_reader.start()
 
