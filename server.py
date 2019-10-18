@@ -3,7 +3,7 @@ import socket
 from hashlib import sha256
 import threading
 import logging as log
-
+import os
 
 class User(threading.Thread):
     def __init__(self, conn, addr):
@@ -64,16 +64,26 @@ class User(threading.Thread):
     def run(self):
         while True:
             msg = self.conn.recv(1024).decode()
-            print(f"{self.login}: {msg} ")
             self.send_msg_all_user(msg)
 
 
+def operations():
+    print("Aviable commands: " + str(lst_commands))
+    while True:
+        event = input('Enter the commands: ')
+        if event == lst_commands[0]:
+            os.abort()
+        elif event == lst_commands[1]:
+            with open('logger_msg_file.log', 'r') as f:
+                for line in f.readlines():
+                    print(line)
 
 sock = socket.socket()
 maxclients = 5
 port = int(input("Enter the port: "))
 lock = threading.Lock()
 lock_msg = threading.Lock()
+lst_commands = ['stop', 'show_logs']
 
 
 while True:
@@ -93,6 +103,9 @@ logger_msg_handler = log.FileHandler(filename='logger_msg_file.log', encoding='U
 logger_msg_handler.setLevel(log.INFO)
 logger_msg.addHandler(logger_msg_handler)
 logger_msg.setLevel(log.INFO)
+
+potoc = threading.Thread(target=operations)
+potoc.start()
 while True:
     conn, addr = sock.accept()
     user = User(conn, addr)
