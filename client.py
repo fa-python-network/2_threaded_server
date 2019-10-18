@@ -10,8 +10,8 @@ def accept_msg():
 sock = socket.socket()
 
 while True:
-    ip = '127.0.0.1'#input('Enter the ip: ')
-    port = 9090#int(input('Enter the port: '))
+    ip = input('Enter the ip: ')
+    port = int(input('Enter the port: '))
     try:
         sock.connect((ip, port))
         break
