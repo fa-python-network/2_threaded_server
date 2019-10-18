@@ -6,7 +6,7 @@ from sendcheck import *
 import threading
 
 SALT = 'memkekazazaaaff'.encode("utf-8")  # соль для хеширования
-varcom = ['mymsg', 'send', 'exit']  # Список доступных команд
+varcom = ['logs', 'stop', 'logsclr', 'nameclr']  # Список доступных команд
 users = []
 # Настройки логгинга (( Взято у умного соседа))
 logging.basicConfig(filename="log_serv", level=logging.INFO)
@@ -15,10 +15,41 @@ with open('names.json', 'r') as file:
     names = json.load(file)
 
 
+def serv_work(sock):
+    print('Сервер работает.')
+    print('Список доступных комманд:')
+    print(varcom)
+    main = True
+    while main:
+        command = input()
+        if command not in varcom:
+            print('Нет такой команды.')
+        elif 'logs' == command:
+            with open('log_serv', 'r') as file:
+                for raw in file:
+                    print(raw)
+        elif 'logclr' == command:
+            with open('log_serv', 'w') as file:
+                pass
+        elif 'nameclr' == command:
+            with open('names.json', 'w') as file:
+                pass
+        elif 'stop' == command:
+            main = False
+            sock.close()
+
+
+def potok_accept():
+    while True:
+        potok = BugurtThread(*sock.accept())
+        potok.start()
+
+
 def hashpass(passw: str):  # Функция хеширования данных
     return hashlib.sha512(passw.encode("utf-8") + SALT).hexdigest()
 
 
+# Начало и инициализация потока пользователя.
 class BugurtThread(threading.Thread):
     def __init__(self, conn, addr):
         super().__init__(daemon=True)
@@ -42,7 +73,8 @@ class BugurtThread(threading.Thread):
         else:
             return False
 
-    def login(self):
+    def login(self):  # поток авторизации пользователя.
+        print('mem')
         logging.info(f"Connect - {self.addr}")
         check = self.mem(self.addr[0])
         access = False
@@ -64,13 +96,14 @@ class BugurtThread(threading.Thread):
             with open('names.json', 'w') as file:
                 json.dump(names, file)
         self.username = check
-        sendmsg(self.conn, "Здесь сегодня тесновато. Но для тебя всегда место найдется!")
+        sendmsg(
+            self.conn, "Здесь сегодня тесновато. Но для тебя всегда место найдется!")
 
     def sendall(self, msg):
         for con in users:
             sendmsg(con.conn, self.username+': '+msg)
 
-    def run(self):
+    def run(self):  # Поток чата.
         users.append(self)
         while self.connected:
             try:
@@ -84,6 +117,7 @@ class BugurtThread(threading.Thread):
             except KeyboardInterrupt:
                 break
 
+
 sock = socket.socket()
 port = 9090
 portmiss = True
@@ -96,10 +130,11 @@ while portmiss:  # Обработка подключения к порту
     except:
         port += 1
 sock.listen(4)
-command = ("exit")  # Команды для логгинга
 
 
+work = threading.Thread(target=serv_work, args = sock) 
 main = True
-while main:  # main цикл обрабатывает команды клиента
+
+while main:  # main цикл обрабатывает команды сервера.
     potok = BugurtThread(*sock.accept())
     potok.start()

@@ -10,8 +10,8 @@ def printmsg():
             data = checkmsg(sock)
             print(data)
         except KeyboardInterrupt:
+            print("Соединение разорвано.")
             break
-
 
 
 def acceptadr(adr):  # Функция проверки адреса через регулярные выражения
@@ -28,7 +28,8 @@ def acceptport(port):  # Функция проверки порта через �
         return port
 
 
-adressation = ['localhost', '192.168.0.101']  # Список возможных адресов по умолчанию
+# Список возможных адресов по умолчанию
+adressation = ['localhost', '192.168.0.101']
 
 go = True  # Переменные проверки адреса и порта
 po = True
@@ -51,13 +52,11 @@ while go or po:
 port = int(port)
 sock = socket.socket()
 sock.connect((adress, port))  # Подключение к серверу
-
-
-
+print('mme')
 
 ex = True
-checkdata = threading.Thread(target=printmsg) 
-checkdata.start() 
+checkdata = threading.Thread(target=printmsg)
+checkdata.start()
 while ex:
     msg = input()
     if msg == "exit":
