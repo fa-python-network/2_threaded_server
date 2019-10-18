@@ -21,7 +21,7 @@ if host == '':
     host = 'localhost'
 bar = [int(65535*(i/10)) for i in range(1,11)]
 thr = []
-for port in range(1024, 65536):
+for port in range(65536):
     thr.append(threading.Thread(target = scan, args = [port, host, p_list]))
 for i in thr:
     i.start()
