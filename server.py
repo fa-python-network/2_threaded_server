@@ -18,7 +18,7 @@ class User(threading.Thread):
             logger_msg.info(f'{self.login}: {msg}')
             for user_th in pool:
                 if self.login != user_th.login:
-                    user_th.conn.send(f'{user_th.login}: {msg}'.encode())
+                    user_th.conn.send(f'{self.login}: {msg}'.encode())
 
     def aunt(self):
         """
@@ -52,11 +52,11 @@ class User(threading.Thread):
                         self.conn.send("Welcome {} to the server".format(login).encode())
                         return login
 
-            self.conn.send('Wrong login or password \nDo you want to restart enter (y/n)? '.encode())
-            event = ''.join(conn.recv(1024).decode().split())
+        self.conn.send('Wrong login or password \nDo you want to restart enter (y/n)? '.encode())
+        event = ''.join(conn.recv(1024).decode().split())
 
-            if event.upper() in ['Y', 'YES', 'AGREE', 'DA', '']:
-                self.aunt()
+        if event.upper() in ['Y', 'YES', 'AGREE', 'DA', '']:
+            self.aunt()
 
     def create_acc(self):
         """
