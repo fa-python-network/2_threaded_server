@@ -18,41 +18,23 @@ def recv_msg(conn: socket.socket):
 	msg=conn.recv(int(header))
 	return msg.decode()
 
-def iden(conn: socket.socket, addr):
-	"""
-	идентификация клиента
-	"""
-	with open('login.json', 'r') as A:
-		login=json.loads(A)
-		for i in login['clients']:
-			if addr[0]==i['ip']:
-				send_msg(conn,"Hello, {}".format(i['name']))
 
-			else:
-				with open('login.json', 'a') as A:
-					login=json.dumps(A)
-					send_msg(conn,'Create a name')
-					name=recv_msg(conn)
-					send_msg(conn,'Create a Password')
-					pswd=recv_msg(conn,)
-					new_client={'ip': addr[0], 'name': name, 'password': pswd}
-					login['clients'].append(new_client)
-					json.dumps(login)
-
-
-def handle(conn: socket.socket):
+def handle(conn, addr):
 	"""
 	подключение клиента 
 	"""
+	client_name=recv_msg(conn)
 	data=''
 	while True:
-		iden(conn,addr)
 		msg= recv_msg(conn)
-		send_msg(conn,msg)
+		print('Got a message {} from {}'.format(msg, client_name))
 		data+=msg
-		if not msg:
+		if 'exit' in msg: 
 			conn.close()
-		return data
+			print('Client {} is turned off'.format(client_name))
+			return 
+
+		send_msg(conn,data)
 
 sock = socket.socket()
 
@@ -72,7 +54,8 @@ sock.setblocking(1)
 try:
 	while True:
 		conn,addr=sock.accept()							# при подключении клиента создается новый поток
-		tr=threading.Thread(target=handle, args=[conn])
+		tr=threading.Thread(target=handle, args=(conn, addr))
+		tr.start()
 		print('Подключен клиент {}'.format(addr[0]))
 
 finally:
