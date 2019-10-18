@@ -1,4 +1,5 @@
 import socket
+import threading
 
 def send_msg(sock, msg):
     header = f'{len(msg):<4}'
@@ -9,6 +10,11 @@ def recv_msg(sock):
     header = int(sock.recv(4).decode().strip())
     data = sock.recv(header*2).decode()
     return data
+
+def thr(sock):
+    while True:
+        data = recv_msg(sock)
+        print(data)
 
 
 from time import sleep
@@ -55,11 +61,11 @@ while not k:
 
         print("Введите сообщение")
         print("Для выхода введите exit")
+        threading.Thread(target=thr, args=[sock]).start()
         msg = input()
         while msg != 'exit':
             send_msg(sock, msg)
-            data = recv_msg(sock)
-            print(data)
+
             msg = input()
         k = True
     except KeyboardInterrupt:

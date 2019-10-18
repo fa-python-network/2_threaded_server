@@ -4,7 +4,7 @@ import threading
 import json
 
 sock = socket.socket()
-history = {}
+online_users = []
 
 
 ##'users.json'
@@ -35,7 +35,9 @@ class T(threading.Thread):
         self.addr = addr
 
     def run(self):
+        global online_users
 
+#Проверка имени
 
         name = recv_msg(self.conn)
         pr = True
@@ -52,8 +54,11 @@ class T(threading.Thread):
             except KeyError:
                 pr = False
             send_msg(self.conn, str(pr))
+        online_users.append([name, self.conn])
+        print(online_users)
 
 
+#Проверка пароля
 
         pr = False
         pswd = recv_msg(self.conn)
@@ -71,8 +76,12 @@ class T(threading.Thread):
             try:
                 data = recv_msg(self.conn)
             except ValueError:
+                online_users.remove([name, self.conn])
                 break
-            send_msg(self.conn, data)
+            data = name + ":" + data
+            for i in online_users:
+                if i[0]!= name:
+                    send_msg(i[1], data)
             print(data)
 
 
