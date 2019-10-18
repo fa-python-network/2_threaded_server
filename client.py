@@ -9,7 +9,7 @@ def printmsg():
         try:
             data = checkmsg(sock)
             print(data)
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, ConnectionAbortedError):
             print("Соединение разорвано.")
             break
 
@@ -52,16 +52,20 @@ while go or po:
 port = int(port)
 sock = socket.socket()
 sock.connect((adress, port))  # Подключение к серверу
-print('mme')
+
 
 ex = True
 checkdata = threading.Thread(target=printmsg)
 checkdata.start()
 while ex:
-    msg = input()
-    if msg == "exit":
-        ex = False
-        checkdata = None
-    sendmsg(sock, msg)
+    try:
+        msg = input()
+        if msg == "exit":
+            ex = False
+            checkdata = None
+        sendmsg(sock, msg)
+    except ConnectionAbortedError:
+        print('Соединение закрыто.')
+        break
 
 sock.close()

@@ -33,7 +33,7 @@ def serv_work(sock):
                 pass
         elif 'nameclr' == command:
             with open('names.json', 'w') as file:
-                pass
+                json.dump({}, file)
         elif 'stop' == command:
             main = False
             sock.close()
@@ -41,8 +41,11 @@ def serv_work(sock):
 
 def potok_accept():
     while True:
-        potok = BugurtThread(*sock.accept())
-        potok.start()
+        try:
+            potok = BugurtThread(*sock.accept())
+            potok.start()
+        except:
+            break
 
 
 def hashpass(passw: str):  # Функция хеширования данных
@@ -74,34 +77,38 @@ class BugurtThread(threading.Thread):
             return False
 
     def login(self):  # поток авторизации пользователя.
-        print('mem')
-        logging.info(f"Connect - {self.addr}")
-        check = self.mem(self.addr[0])
-        access = False
-        if check:  # Ветка знакомого пользователя
-            msg = f'Добрый вечер, {check}! Ваш пароль?'
-            while not access:
-                sendmsg(self.conn, msg)
+        try:
+            logging.info(f"Connect - {self.addr}")
+            check = self.mem(self.addr[0])
+            access = False
+            if check:  # Ветка знакомого пользователя
+                msg = f'Добрый вечер, {check}! Ваш пароль?'
+                while not access:
+                    sendmsg(self.conn, msg)
+                    passw = checkmsg(self.conn)
+                    access = self.autoriz(self.addr[0], passw)
+                    msg = 'Неверный ввод!'
+                sendmsg(self.conn, 'ДАРОВА')
+            else:  # Ветка нового пользователя
+                sendmsg(self.conn, "Введите, ваше имя:")
+                name = checkmsg(self.conn)
+                check = name
+                sendmsg(self.conn, "Введите, ваш пароль:")
                 passw = checkmsg(self.conn)
-                access = self.autoriz(self.addr[0], passw)
-                msg = 'Неверный ввод!'
-            sendmsg(self.conn, 'ДАРОВА')
-        else:  # Ветка нового пользователя
-            sendmsg(self.conn, "Введите, ваше имя:")
-            name = checkmsg(self.conn)
-            check = name
-            sendmsg(self.conn, "Введите, ваш пароль:")
-            passw = checkmsg(self.conn)
-            names[self.addr[0]] = [name, hashpass(passw)]
-            with open('names.json', 'w') as file:
-                json.dump(names, file)
-        self.username = check
-        sendmsg(
-            self.conn, "Здесь сегодня тесновато. Но для тебя всегда место найдется!")
+                names[self.addr[0]] = [name, hashpass(passw)]
+                with open('names.json', 'w') as file:
+                    json.dump(names, file)
+            self.username = check
+            sendmsg(
+                self.conn, "Здесь сегодня тесновато. Но для тебя всегда место найдется!")
+        except ConnectionResetError:
+            pass
 
     def sendall(self, msg):
         for con in users:
             sendmsg(con.conn, self.username+': '+msg)
+            with open('story.json', 'a') as file:
+                json.dump(self.username+': '+msg+'\n', file)
 
     def run(self):  # Поток чата.
         users.append(self)
@@ -132,9 +139,15 @@ while portmiss:  # Обработка подключения к порту
 sock.listen(4)
 
 
-work = threading.Thread(target=serv_work, args = sock) 
+work = threading.Thread(target=serv_work, args=[sock])
+work.start()
 main = True
 
 while main:  # main цикл обрабатывает команды сервера.
-    potok = BugurtThread(*sock.accept())
-    potok.start()
+    try:
+        potok = BugurtThread(*sock.accept())
+        potok.start()
+    except OSError:
+        print('Сервер закрыт.')
+        break
+

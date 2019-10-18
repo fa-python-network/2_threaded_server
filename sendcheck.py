@@ -1,6 +1,6 @@
 from time import sleep
-
 # Общие функции отправки и принятия сообщения.
+
 
 def sendmsg(who, msg):
     sleep(0.1)
