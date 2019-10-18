@@ -18,7 +18,7 @@ class User(threading.Thread):
             logger_msg.info(f'{self.login}: {msg}')
             for user_th in pool:
                 if self.login != user_th.login:
-                    user.conn.send(f'{user_th.login}: {msg}'.encode())
+                    user_th.conn.send(f'{user_th.login}: {msg}'.encode())
 
     def aunt(self):
         """
