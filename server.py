@@ -5,29 +5,39 @@ import threading
 import logging as log
 import os
 
+
 class User(threading.Thread):
-    def __init__(self, conn, addr):
+    def __init__(self, connection, address):
         super(User, self).__init__()
-        self.conn = conn
-        self.addr = addr
+        self.conn = connection
+        self.addr = address
         self.login = self.aunt()
 
     def send_msg_all_user(self, msg):
         with lock_msg:
             logger_msg.info(f'{self.login}: {msg}')
-            for user in pool:
-                if self.login != user.login:
-                    user.conn.send(f'{user.login}: {msg}'.encode())
+            for user_th in pool:
+                if self.login != user_th.login:
+                    user.conn.send(f'{user_th.login}: {msg}'.encode())
 
-    def aunt(self): #choose sign in or sign up
-        self.conn.send('Have you alredy had your own acc?(y/n) '.encode())
-        event = ''.join(conn.recv(1024).decode().split()) # delete wrong space
+    def aunt(self):
+        """
+        choose sign in or sign up
+        :return: self.enter
+        """
+        self.conn.send('Have you already had your own acc?(y/n) '.encode())
+        # delete wrong space
+        event = ''.join(conn.recv(1024).decode().split())
         if event.upper() in ['1', 'Y', 'YES', 'HAVE', 'Н']:
             return self.enter()
         else:
             return self.create_acc()
 
-    def enter(self): #enter to account
+    def enter(self) -> str:
+        """
+        enter to account
+        :return: login
+        """
         self.conn.send("Enter the login: ".encode())
         login = self.conn.recv(1024).decode()
         self.conn.send("Enter the password: ".encode())
@@ -48,7 +58,11 @@ class User(threading.Thread):
             if event.upper() in ['Y', 'YES', 'AGREE', 'DA', '']:
                 self.aunt()
 
-    def create_acc(self): #create_account
+    def create_acc(self):
+        """
+         create_account
+        :return: self.enter
+        """
         self.conn.send("Enter the new login: ".encode())
         login = self.conn.recv(1024).decode()
         self.conn.send("Enter the new password: ".encode())
@@ -61,14 +75,14 @@ class User(threading.Thread):
 
         return self.enter()
 
-    def run(self):
+    def run(self) -> None:
         while True:
             msg = self.conn.recv(1024).decode()
             self.send_msg_all_user(msg)
 
 
-def operations():
-    print("Aviable commands: " + str(lst_commands))
+def operations() -> None:
+    print("Available commands: " + str(lst_commands))
     while True:
         event = input('Enter the commands: ')
         if event == lst_commands[0]:
@@ -78,8 +92,9 @@ def operations():
                 for line in f.readlines():
                     print(line)
 
+
 sock = socket.socket()
-maxclients = 5
+max_clients = 5
 port = int(input("Enter the port: "))
 lock = threading.Lock()
 lock_msg = threading.Lock()
@@ -88,35 +103,26 @@ lst_commands = ['stop', 'show_logs']
 
 while True:
     try:
-        sock.bind(("",port))
+        sock.bind(("", port))
         break
-    except:
+    except (ConnectionError, OSError):
         port += 1
         if port > 65535:
             print("Not founded the port")
             exit(0)
 
 pool = []
-sock.listen(maxclients)
+sock.listen(max_clients)
 logger_msg = log.getLogger("logger_msg")
 logger_msg_handler = log.FileHandler(filename='logger_msg_file.log', encoding='UTF-8')
 logger_msg_handler.setLevel(log.INFO)
 logger_msg.addHandler(logger_msg_handler)
 logger_msg.setLevel(log.INFO)
 
-potoc = threading.Thread(target=operations)
-potoc.start()
+thread = threading.Thread(target=operations)
+thread.start()
 while True:
     conn, addr = sock.accept()
     user = User(conn, addr)
     pool.append(user)
     user.start()
-
-
-
-
-
-
-
-
-
