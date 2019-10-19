@@ -56,7 +56,7 @@ class User(threading.Thread):
         event = ''.join(conn.recv(1024).decode().split())
 
         if event.upper() in ['Y', 'YES', 'AGREE', 'DA', '']:
-            self.aunt()
+            return self.aunt()
 
     def create_acc(self):
         """
