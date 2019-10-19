@@ -1,5 +1,4 @@
 import socket
-import json
 import threading
 
 def send_msg(conn: socket.socket,msg):
@@ -27,11 +26,11 @@ def handle(conn, addr):
 	data=''
 	while True:
 		msg= recv_msg(conn)
-		print('Got a message {} from {}'.format(msg, client_name))
+		print('Got a message [{}] from [{}]'.format(msg, client_name))
 		data+=msg
 		if 'exit' in msg: 
 			conn.close()
-			print('Client {} is turned off'.format(client_name))
+			print('Client [{}] is turned off'.format(client_name))
 			return 
 
 		send_msg(conn,data)
