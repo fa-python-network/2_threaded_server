@@ -15,10 +15,15 @@ sock.connect((hostname, port))
 data = sock.recv(1024).decode()
 print(data)
 
-if data == "Введите Ваше имя: ":
+login = input()
+sock.send(login.encode())
 
-	name = input()
-	sock.send(name.encode())
+data = sock.recv(1024).decode()
+
+if data == "Придумайте логин: ":
+
+	login = input()
+	sock.send(login.encode())
 	print(sock.recv(1024).decode())
 	password = input()
 	sock.send(password.encode())
