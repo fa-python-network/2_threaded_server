@@ -1,27 +1,54 @@
 import socket 
-import threading 
+from threading import Thread
 import time
 import csv
 import sys
 
+def receiver(conn):
+    try:
+        answ = conn.recv(16384).decode()
+        return answ
+    except:
+        print("Пользователь отключился")
+        conn.close()
+    
+def sender(conn, msg):
+    try:
+        conn.send(msg.encode())
+    except:
+        print("Пользователь отключился")
+        conn.close()
+
+
 def port_listen():
 
-	#Прослушивает порт, принимает запос на подкоючение от пользователя
+	#Прослушивает порт, принимает запос на подключение от пользователя
 	
-	sock = socket.socket()
-	sock.bind(('', 9090))
-	sock.listen(1)
-	while True:
-		conn, addr = sock.accept()
-		user_data_exchange(conn, addr)
+    while True:
+        sock = socket.socket()
+        sock.bind(('', 9090))
+        sock.listen(1)
 
+        try:
+            while True:
+                conn, addr = sock.accept()
+                Thread(target = user_data_exchange, args = (conn, addr)).start()
 
-def auth (conn, addr):
+        finally:
+            sock.close()
+"""
+    	while True:
+    		conn, addr = sock.accept()
+    		user_data_exchange(conn)
+
+"""
+
+def auth (conn):
 
     #Функция авторизации пользователей
     arr = {}
-    conn.send(("Введите Ваш логин: ").encode())
-    login = conn.recv(1024).decode()
+    sender(conn, "Введите Ваш логин: ")
+    login = receiver(conn)
 
     #Чтение списка пользователей из csv файла
 
@@ -30,50 +57,88 @@ def auth (conn, addr):
         for row in reader:
             for i in range(len(row)):
                 cur_arr = row[i].split(";")
-                arr[cur_arr[0]] = [cur_arr[1],cur_arr[2]]
+                arr[cur_arr[0]] = [cur_arr[1]]
+        users.close()
 
-    #Проверка пользователя, передача соответствующих сообщений 
+    #Проверка пароля
 
-    if login in arr.keys():
-        conn.send(("Введите пароль: ").encode())
-        password = conn.recv(1024).decode()
-        if password == arr[str(login)][1]:
-            hi_msg = "Добро пожаловать, " + str(arr[str(login)][0])
-            conn.send(hi_msg.encode())
+    auth_status = False
+    while auth_status != True:
+        if login in arr.keys():
+            sender(conn, "Введите пароль: ")
+            password = receiver(conn)
+            if password == arr[str(login)][0]:
+                hi_msg = "Добро пожаловать, " + str(login)
+                sender(conn, hi_msg)
+                auth_status = True
+                chat(conn)
+            else:
+                sender(conn, "Неверный пароль!")
+                
+        #При отсутствии пользователя в файле, отправка соответствующего сообщения, повторный запрос действия
+        else:
+            sender(conn, "Пользователь не найден \n")
+            user_data_exchange(conn)
+            break
 
-    #При отсутствии пользователя в файле, вызов функции регистрации
-    else:
-        reg(conn, login)
 
 
-
-def reg(conn, login):
+def reg(conn):
 
     #Функция регистрации пользователей        
 
-    conn.send(("Придумайте логин: ").encode())
-    name = conn.recv(1024).decode()
-    conn.send(("Придумайте пароль: ").encode())
-    password = conn.recv(1024).decode()
-    hi_msg = "Добро пожаловать, " + name 
-    conn.send(hi_msg.encode())
-    new_user = [str(login), name, password]
-    with open('users.csv', 'w', newline='') as users:
-        writer = csv.writer(users, delimiter = ';')
-        writer.writerow(new_user)
+    sender(conn, "Придумайте логин: ")
+    login = receiver(conn)
+    arr = {}
+
+    with open('users.csv', 'r') as users:
+        reader = csv.reader(users)
+        for row in reader:
+            for i in range(len(row)):
+                cur_arr = row[i].split(";")
+                arr[cur_arr[0]] = [cur_arr[1]]
+        users.close()
+
+    if (login in arr.keys()):
+        sender(conn, "Логин занят!")
+        reg(conn)
+    else:    
+        sender(conn, "Придумайте пароль: ")
+        password = receiver(conn)
+        hi_msg = "Добро пожаловать, " + login 
+        sender(conn, hi_msg)
+        new_user = [login, password]
+        with open('users.csv', 'a', newline='') as users:
+            writer = csv.writer(users, delimiter = ';')
+            writer.writerow(new_user)
+        chat(conn)
 
 
 def user_data_exchange(conn, addr):
 
-	auth(conn, addr)
-	while True:
-		print('here')
-		data = conn.recv(1024)
-		if not data:
-			break
-		msg = data.decode()
-		print(msg)
+    sender(conn, "Для входа введите 1, для регистрации введите 2: ")
+    answ = receiver(conn)
 
+    user_check = False
+    while(user_check != True):
+
+        if answ == '1':
+            user_check = True    
+            auth(conn)
+        elif answ == '2':
+            user_check = True
+            reg(conn)
+        elif type(conn) == socket:
+            conn.send(("Для входа введите 1, для регистрации введите 2: ").encode())
+            answ = receiver(conn)
+        else:
+            break
+
+def chat(conn):
+
+    while True:
+        print("Hello")
+        break
 
 if __name__ == "__main__":
     port_listen()

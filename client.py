@@ -10,44 +10,13 @@ hostname = 'localhost'
 
 sock.connect((hostname, port))
 
-#Получение "приветственного" сообщения от сервера/запрос имени
+#Взаимодействие с сервером
 
-data = sock.recv(1024).decode()
-print(data)
-
-login = input()
-sock.send(login.encode())
-
-data = sock.recv(1024).decode()
-
-if data == "Придумайте логин: ":
-
-	login = input()
-	sock.send(login.encode())
-	print(sock.recv(1024).decode())
-	password = input()
-	sock.send(password.encode())
-	print(sock.recv(1024).decode())
-	
-else:
-
-	password = input()
-	sock.send(password.encode())
-	answ = sock.recv(1024).decode()
-	print(answ + '\n')
-
-
-answ = sock.recv(1024).decode()
-print(answ)
-
-#Отправка сообщений
-
-msg = ""
 while True:
-	msg = input()
-	if msg == "exit":
-		sock.send(("Клиент разорвал соединение \n").encode())
-		break
-	sock.send(msg.encode())
-	
+	sock.settimeout(1)
+	server_msg = sock.recv(16384).decode()
+	print(server_msg)
+	answ = input()
+	sock.send(answ.encode())
+
 sock.close()
