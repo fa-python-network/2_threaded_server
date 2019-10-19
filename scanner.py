@@ -10,18 +10,20 @@ def scan_port(host, num_of_port):
 	"""
 	try:
 		conn = sock.connect((host, num_of_port))
-		print("the {} port is open".format(num_of_port))
+		#print("the {} port is open".format(num_of_port))
 		list_of_open_ports.append(num_of_port)
-		conn.close()
+		#conn.close()
 	except:
-		print("the {} port is not available".format(num_of_port))
+		#print("the {} port is not available".format(num_of_port))
 		pass
 
 sock = socket.socket()
-host=input("Enter your host or IP, please.\nIt can be 'localhost', or press 'Enter',\nor just input as it is. (Ex: 10.0.2.15)")
+host=input("Enter your host or IP, please.\nIt can be 'localhost', or press 'Enter',\nItor just input as it is. (Ex: 10.0.2.15)")
+
+print('\nwait...')			# почти как progress bar
 
 threads=[]
-for i in range(9090,9150):
+for i in range(1,65536): 			
 	"""
 	распараллеливание сканирования портов
 	"""
@@ -33,5 +35,5 @@ for i in threads:
 	i.join()
 
 
-print("\nThere ports that are available")
-print(list_of_open_ports)
+print("\nAvailable ports are in the list below")
+print(sorted(list_of_open_ports))
