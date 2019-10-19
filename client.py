@@ -1,13 +1,22 @@
+import socket, threading
 
-import socket
-import random
-from time import sleep
-client = socket.socket()
-client.setblocking(1)
-client.connect(('localhost', 9095))
-while True:
-	data = input("Please, write the message: ")
-	client.send(data.encode())
-	if data=='bye':
-		break
-client.close()
+def send(uname):
+	while True:
+		msg = input('\n > ')
+		data = uname + ':' + " " + msg
+		cl_sock.send(data.encode())
+
+def recv():
+	while True:
+		data = cl_sock.recv(1024)
+		print('\n > '+ str(data.decode()))
+
+cl_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+uname = input('Enter your name to enter the chat > ')
+cl_sock.connect(('localhost', 9128))     
+print('Connected Successful!')
+cl_sock.send(uname.encode())
+thread_send = threading.Thread(target = send,args=[uname])
+thread_send.start()
+thread_recv = threading.Thread(target = recv)
+thread_recv.start()
