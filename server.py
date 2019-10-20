@@ -5,7 +5,7 @@ CLIENT = 0  # количество всех клиентов, имеющих в�
 lock = threading.Lock()  # создает замок для всех потоков
 
 
-def connect(conn: socket.socket, msg: str, addr: tuple) -> None:
+def connect(conn: socket.socket, addr: tuple) -> None:
     """
     Функция подключения
 
