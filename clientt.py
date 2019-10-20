@@ -1,6 +1,8 @@
 import socket
+import threading
 
 sock = socket.socket()
+
 i=False
 while not i:
 	try:
@@ -20,8 +22,8 @@ while not i:
 		while msg!='exit':
 			sock.send(msg.encode())
 			msg = input()
-			i=True
-	except Keyboardinterrupt:
+		i=True
+	except KeyboardInterrupt:
 		break
 sock.close()
 
