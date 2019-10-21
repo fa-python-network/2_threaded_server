@@ -1,4 +1,4 @@
-import socket, csv, threading,os
+import socket, threading,os
 lock=threading.Lock()
 lock2=threading.Lock()
 lock3=threading.Lock()
@@ -52,7 +52,7 @@ class Client(threading.Thread):
 		self.actions()
 	def global_message(self,gl_msg):#message to file and to every user
 		with lock2:#send to global chat file
-			global_chat = open('global_chat.txt','w')
+			global_chat = open('global_chat.txt','a')
 			global_chat.write((f"{self.login} global: {gl_msg}"+"\n"))
 			for userss in users:#send to all
 				if userss!=self.name:
@@ -61,7 +61,7 @@ class Client(threading.Thread):
 		with lock2:
 			for userss in users:#send to user
 				if userss==target_user:
-					userss.conn.send((f"{self.name} private: {gl_msg}").encode)                
+					userss.conn.send((f"{self.name} private: {us_msg}").encode)                
 	def actions(self):#Choose what to do
 		self.conn.send(('Enter the commands: '+', '.join(actions_list)).encode())
 	
@@ -73,8 +73,8 @@ class Client(threading.Thread):
 					self.conn.send(z.encode())
 	        
 			elif command == actions_list[2]:
-				print("Enter a message")
-				msg_glob=input()
+				self.conn.send("Enter a message".encode())
+				msg_glob=(self.conn.recv(1024)).decode()
 				self.global_message(msg_glob)
 			elif command == actions_list[0]:
 				os.abort()
