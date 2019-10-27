@@ -1,22 +1,42 @@
+from queue import Queue 
 import socket
 import threading
 
-def port_scan(host, port):
-	sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sock.settimeout(0.5)
+host = "127.0.0.1"
+queue = Queue()
+open_ports = []
+
+
+def portscan(port):
 	try:
-		connect = sock.connect((host, port))
-		print("Port ", port, " openned")
-		connect.close()
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect((host, port))
+		return True
 	except:
-		pass
+		return False
 
 
+def get_ports(count):
+	for port in range(count):
+		queue.put(port)
 
-host="127.0.0.1"
+def worker():
+	while not queue.empty():
+		port=queue.get()
+		if portscan(port):
+			print("Port {} is openned!".format(port))
+			open_ports.append(port)
 
+def run(threads, count):
+	get_ports(count)
+	thread_list=[]
+	for i in range(threads):
+		thread = threading.Thread(target=worker)
+		thread_list.append(thread)
+	for thread in thread_list:
+		thread.start()
+	for thread in thread_list:
+		thread.join()
+	print("Open ports are: ", open_ports)
 
-for i in range(1000):
-	port_scan(host, i)
-	potoc=threading.Thread(target = port_scan, args=(host, i))
-	potoc.start()
+run(100, 1024)
