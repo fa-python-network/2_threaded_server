@@ -1,4 +1,5 @@
 import socket
+import threading
 
 def port_scan(host, port):
 	sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -10,6 +11,12 @@ def port_scan(host, port):
 	except:
 		pass
 
+
+
 host="127.0.0.1"
+
+
 for i in range(1000):
 	port_scan(host, i)
+	potoc=threading.Thread(target = port_scan, args=(host, i))
+	potoc.start()
