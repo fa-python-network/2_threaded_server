@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import socket
 from datetime import datetime
 from contextlib import closing
@@ -17,7 +16,7 @@ class Server():
        self.__log = log
        self.__users = users
        self.clients = clients
-       self.port = int(input("Порт:"))
+       self.port =  int(input("Порт:"))
        self.sock = None
        self.status = status
        self.startServer()
@@ -30,7 +29,7 @@ class Server():
                break
            except:
                self.port+=1
-       print('Занял порт {self.port}')
+       print(f'Занял порт {self.port}')
        self.sock.listen(5)
        while True:
            conn, addr = self.sock.accept()
@@ -51,11 +50,12 @@ class Server():
                data = pickle.dumps(["message",msg])
                sock.send(data)
 
-   def checkPasswrd(self, passwd, userkey):
+
+   def checkPasswrd(self, passwd, userkey) -> bool:
        key = hashlib.md5(passwd.encode() + b'salt').hexdigest()
        return key == userkey
 
-   def generateHash(self, passwd):
+   def generateHash(self, passwd) -> bytes:
        key = hashlib.md5(passwd.encode() + b'salt').hexdigest()
        return key
 
@@ -72,7 +72,7 @@ class Server():
                        self.broadcast(data, conn)
                else:
                    conn.close()
-                   msg="{client} has left at {datetime.now().time()}"
+                   msg=f"{client} has left at {datetime.now().time()}"
                    self.broadcast(msg,conn)
                    self.clients.remove(conn)
                    self.serverStopped(address)
@@ -86,9 +86,7 @@ class Server():
 
    def serverStarted(self,ip):
        with open(self.__log, "a", encoding="utf-8") as f:
-           print(f "{datetime.now().time()} Server Launched {ip}", file = f)
-           
-           
+           print(f"{datetime.now().time()} Server Launched {ip}", file=f)
    def serverStopped(self,ip):
        with open(self.__log, "a", encoding="utf-8") as f:
            print(f"{datetime.now().time()} Server Stopped {ip}", file = f)
@@ -97,7 +95,7 @@ class Server():
    def newUser(self,conn, users,client):
        conn.send(pickle.dumps(["nameRequest",""]))
        client = pickle.loads(conn.recv(1024))[1]
-       conn.send(pickle.dumps(["passwd","Я вас еще не знаю, поэтому придумайте себе пароль : "]))
+       conn.send(pickle.dumps(["passwd","Необходим новый пароль : "]))
        passwd = self.generateHash(pickle.loads(conn.recv(1024))[1])
        conn.send(pickle.dumps(["success",f"Здравствуйте, {client}"]))
        users[client] = {'password': passwd}
@@ -130,7 +128,7 @@ class Server():
            except:
                conn.send(pickle.dumps(["nameRequest",""]))
                client = pickle.loads(conn.recv(1024))[1]
-               conn.send(pickle.dumps(["passwd","Я вас еще не знаю, поэтому придумайте себе пароль :  "]))
+               conn.send(pickle.dumps(["passwd","Необходим новый пароль :  "]))
                passwd = self.generateHash(pickle.loads(conn.recv(1024))[1])
                conn.send(pickle.dumps(["success",f"Здравствуйте, {client}"]))
                msg=f"{client} has connected at {datetime.now().time()}"
@@ -142,4 +140,3 @@ class Server():
 
 
 server = Server()
-

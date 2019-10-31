@@ -38,11 +38,7 @@ class Client:
 
         self.sock.close()
 
-    '''
 
-    отправка пароля
-
-    '''
     def nameRequest(self):
         self.sock.send(pickle.dumps(["nameRequest",self.name]))
         sleep(1.5)
