@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import socket
 from threading import Thread
@@ -79,4 +80,3 @@ port =  int(input("Порт:"))
 port = port if (port >= 0 and port <= 65535)  else  9090
 sock.connect(('localhost', port))
 l = Client(sock, port)
-

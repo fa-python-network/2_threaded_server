@@ -1,4 +1,4 @@
-import socket
+
 from datetime import datetime
 from contextlib import closing
 import os
@@ -139,4 +139,3 @@ class Server():
 
 
 
-server = Server()
