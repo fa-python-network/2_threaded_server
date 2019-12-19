@@ -1,16 +1,31 @@
 import socket
-from time import sleep
+import threading
+
 
 sock = socket.socket()
-sock.setblocking(1)
-sock.connect(('10.38.165.12', 9090))
+sock.connect(('localhost', int(input('Введите порт: '))))
 
-#msg = input()
-msg = "Hi!"
-sock.send(msg.encode())
 
-data = sock.recv(1024)
+def reader():
+	while True:
+		msg = (sock.recv(1024).decode())
+		if msg != 'exit':
+			print(msg)
+		else:
+			break
+
+s1 = threading.Thread(target = reader)
+s1.setDaemon(True)
+s1.start()
+
+right = 1
+while right:
+	msg = input()
+	if msg != 'exit':
+		sock.send( msg.encode('utf-8'))
+	else:
+		sock.send( msg.encode('utf-8'))
+		right = 0
 
 sock.close()
 
-print(data.decode())
