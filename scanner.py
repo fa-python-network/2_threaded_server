@@ -1,15 +1,27 @@
 import socket
-from threading import Thread
+import threading
 
-N = 2**16 - 1
+m = 2 ** 16 - 1
 
-for port in range(1,100):
-    sock = socket.socket()
-    try:
-        print(port)
-        sock.connect(('127.0.0.1', port))
-        print("Порт", i, "открыт")
-    except:
-        continue
-    finally:
-        sock.close()
+
+def scan(arr):
+    for port in arr:
+        sock = socket.socket()
+        try:
+            sock.connect(('127.0.0.1', port))
+            print("Порт", port, "открыт")
+        except:
+            continue
+        finally:
+            sock.close()
+    return
+
+
+for thread in range(66):
+    arr = []
+    for i in range(1000):
+        arr.append(thread * 1000 + i)
+        if arr[i] >= m:
+            break
+    thr = threading.Thread(target=scan, args=[arr])
+    thr.start()
