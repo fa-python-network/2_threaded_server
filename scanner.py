@@ -8,7 +8,7 @@ for port in range(1,100):
     try:
         print(port)
         sock.connect(('127.0.0.1', port))
-        print("Порт", i, "открыт")
+        print("Порт", port, "открыт")
     except:
         continue
     finally:
