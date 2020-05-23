@@ -12,7 +12,7 @@ while True:
     print("От сервера :", data.decode())
     out_data = input()
     sock.sendall(bytes(out_data, 'UTF-8'))
-    if out_data == 'bye' or out_data=='':
+    if out_data == 'exit' or out_data=='':
         print ('Всего хорошего')
         break
 sock.close()
