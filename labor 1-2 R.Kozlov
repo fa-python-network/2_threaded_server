@@ -1,0 +1,45 @@
+import socket
+SERVER_ADDRESS = ('localhost', 8686)
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(SERVER_ADDRESS)
+server_socket.listen(10)
+print('server is running, please, press ctrl+c to stop')
+while True:
+connection, address = server_socket.accept()
+print("new connection from {address}".format(address=address))
+data = connection.recv(1024)
+print(str(data))
+connection.send(bytes('Hello from server!', encoding='UTF-8'))
+connection.close()
+
+import socket
+MAX_CONNECTIONS = 10
+address_to_server = ('localhost', 8686)
+clients = [socket.socket(socket.AF_INET, socket.SOCK_STREAM) for i in range(MAX_CONNECTIONS)]
+for client in clients:
+client.connect(address_to_server)
+for i in range(MAX_CONNECTIONS):
+clients[i].send(bytes("hello from client number " + str(i), encoding='UTF-8'))
+for client in clients:
+data = client.recv(1024)
+print(str(data))
+
+import socket
+import threading
+sock = socket.socket()
+sock.bind(('', 9090))
+sock.listen(0)
+conn, addr = sock.accept()
+print(addr)
+msg = ''
+while True:
+data = conn.recv(1024)
+if not data:
+break
+msg += data.decode()
+p1 = threading.Thread(target=conn.send, name="t1", args=[data])
+p2 = threading.Thread(target=conn.send, name="t2", args=[data])
+p1.start()
+p2.start()
+print(msg)
+conn.close()
