@@ -1,16 +1,23 @@
 import socket
-from time import sleep
 
 sock = socket.socket()
-sock.setblocking(1)
-sock.connect(('10.38.165.12', 9090))
 
-#msg = input()
-msg = "Hi!"
-sock.send(msg.encode())
 
-data = sock.recv(1024)
+address = input("Aдрес сервера - ")
 
+# безопасный ввод данных по умолчанию
+if address == '':
+    address = 'localhost'
+port = int(input("Введите порт: "))
+sock.connect((address, port))
+
+
+msg = ["PINGUIN #1", "PINGUIN #2", "PINGUIN #3", "EXIT"]
+
+# Пользователь считает пингвинов и уходит
+
+for i in range(len(msg)):
+    sock.send(msg[i].encode())
+    data = sock.recv(1024)
+    print(data.decode())
 sock.close()
-
-print(data.decode())
