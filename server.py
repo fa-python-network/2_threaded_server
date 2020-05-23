@@ -1,20 +1,82 @@
 import socket
+import logging
 
-sock = socket.socket()
-sock.bind(('', 9090))
-sock.listen(0)
-conn, addr = sock.accept()
-print(addr)
+# Установлен конфиг для логирования
+import threading
 
-msg = ''
+logging.basicConfig(
+    filename='server.log',
+    filemode='a',
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%d-%b-%y %H:%M:%S',
+    level=logging.DEBUG
+)
+
+logging.debug('-----------------------------------')
+logging.debug('Серверок запущен ')
+
+sock = socket.socket()  # Инициализация сокета
+sock.settimeout(60)  # Установлен интервал бездействия
+
+
+def connect(conn, addr):
+    logging.debug('информацию стрясли с клиента %s', addr)
+
+    logging.debug('Обмен цифрами с клиентом')
+    while True:
+        data = conn.recv(1024)
+        if not data or data.decode() == "exit":
+            logging.debug('Клиент закрыл сделку')
+            break
+        logging.debug('Сообщение от %s: %s', addr, data.decode())
+        conn.send(data)
+    conn.close()
+    logging.debug('Клиент в отключке')
+    return
+
+
+# Задаётся базовый порт
+while True:
+    try:
+        while True:
+            port = int(input("Введите порт (диапозон 1024-65535): "))
+            if 1024 <= port <= 65535:
+                break
+    except ValueError:
+        print("Повторите ввод!")
+    else:
+        break
+
+# Проверка доступности порта. Перебор, в случае неудачи
+while True:
+    try:
+        sock.bind(('', port))  # Занимаем порт
+    except socket.error:
+        logging.warning('Порт %s занят, поиск другого', port)
+        port += 1
+        if port > 65536:
+            logging.warning('достигнут предел ')
+            port = 1024
+    else:
+        logging.debug('Назначен порт %s', port)
+        break
+
+logging.debug('Прослушиваем клиента')
+sock.listen(1)
 
 while True:
-	data = conn.recv(1024)
-	if not data:
-		break
-	msg += data.decode()
-	conn.send(data)
+    logging.debug('Ожидание подключения клиента')
+    try:
+        conn, addr = sock.accept()  # Установка соединени с клиентом
+        thr = threading.Thread(target=connect, args=[conn, addr])
+        thr.start()
+    except socket.timeout:
+        try:
+            logging.warning('Сервер бездействует, остановка ..')
+            sock.shutdown(socket.SHUT_RDWR)  # Завершение работы сокета, в случае бездействия
+        except (socket.error, OSError, ValueError):
+            pass
+        break
 
-print(msg)
-
-conn.close()
+sock.close()
+logging.debug('Сервер остановлен')

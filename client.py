@@ -1,16 +1,29 @@
 import socket
-from time import sleep
 
 sock = socket.socket()
-sock.setblocking(1)
-sock.connect(('10.38.165.12', 9090))
 
-#msg = input()
-msg = "Hi!"
-sock.send(msg.encode())
+while True:
+    try:
+        address = input("Введите адресок сервера: ")
+        if address == '':
+            address = 'localhost'
+        while True:
+            port = int(input("Введите портик: "))
+            if 1024 <= port <= 65535:
+                break
+        sock.connect((address, port))  # Подключение к серверу
+    except (socket.error, ValueError):
+        print("Повторите плиз")
+    else:
+        break
 
-data = sock.recv(1024)
+# массив для имитации трёх сообщений от пользователя
+msg = ["Здарова бандиты!", "хочу курочку из кфс", "exit"]
+
+# Цикл для имитации ввода сообщений пользователем
+for i in range(len(msg)):
+    sock.send(msg[i].encode())
+    data = sock.recv(1024)
+    print(data.decode())
 
 sock.close()
-
-print(data.decode())
