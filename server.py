@@ -1,20 +1,41 @@
+import threading
 import socket
 
-sock = socket.socket()
-sock.bind(('', 9090))
-sock.listen(0)
-conn, addr = sock.accept()
-print(addr)
 
-msg = ''
+N = 2**16 - 1
+
+def portscan(a):
+
+    for n in range(a-1000, a):
+        if n >=1:
+            sock = socket.socket()
+            sock.settimeout(1)
+            try:
+                sock.connect(('127.0.0.1', n))
+                print("Порт :", n, "открыт")
+            except:
+                
+                    sock.close()
+
+                    pass
+
+
+port_set = []
+c = 0
+b = 0
 
 while True:
-	data = conn.recv(1024)
-	if not data:
-		break
-	msg += data.decode()
-	conn.send(data)
+    if N >= b:
+        b += 1000
+        port_set.append(b)
+        c += 1
+    else:
+        port_set[c-1] - 1000 + N % 1000
+        break
+                       
+                              
 
-print(msg)
-
-conn.close()
+print(port_set)
+                      
+thr = [threading.Thread(target=portscan, args=[a]) for a in port_set]
+[t.start() for t in thr]
