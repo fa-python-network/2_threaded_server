@@ -1,20 +1,52 @@
 import socket
+import threading
 
 sock = socket.socket()
-sock.bind(('', 9090))
-sock.listen(0)
-conn, addr = sock.accept()
-print(addr)
+port = int(input('Enter the port you want a server to run on: '))
 
-msg = ''
+try:
+    sock.bind(('localhost', port))
+except:
+    raise ConnectionError(f':${port} already in-use by another application')
 
-while True:
-	data = conn.recv(1024)
-	if not data:
-		break
-	msg += data.decode()
-	conn.send(data)
+sock.listen(1)
 
-print(msg)
+def handle(connection, clients, id):
+    while True:
+        msg = connection.recv(1024).decode()
+        print(f'User {id}: {msg}\n')
 
-conn.close()
+        if msg == 'exit':
+            clients.remove(connection)
+            break
+        else:
+            for i in clients:
+                if i != connection:
+                    i.send((f'User {id}: ' + msg).encode('utf-8'))
+
+    print(f'User {id} disconnected!')
+    connection.close()
+
+def run():
+    clients = []
+    id = 0
+
+    try:
+        print('Use Ctrl+C to kill the server')
+
+        while True:
+            con, _ = sock.accept()
+            print(f'User ${id} connected, listening to data...')
+
+            threading.Thread(
+                target=handle, args=(
+                    con, clients, id
+                ), daemon=True
+            ).start()
+        
+            clients.append(con)
+            print(f'Current client count ${id}')
+    except KeyboardInterrupt:
+        print('Server stopped successfully.')
+
+run()
